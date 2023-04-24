@@ -17,6 +17,7 @@ class Genres(models.Model):
 
 
 class Books(models.Model):
+    cover = models.ImageField()
     name = models.CharField(max_length=100)
     author = models.ForeignKey(Authors, on_delete=models.CASCADE)
     description = models.CharField(max_length=150)
