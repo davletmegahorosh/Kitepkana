@@ -1,65 +1,74 @@
 from rest_framework import serializers
-from .models import Books, Genres, Authors
+from .models import Book, Genre, Author
 from rest_framework.exceptions import ValidationError
 
 
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Books
+        model = Book
         fields = '__all__'
 
-class AuthorSerializer(serializers.Serializer):
+class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Authors
-        fields = '__all__'
+        model = Author
+        fields = 'id name surname'.split()
 
-class GenresSerializer(serializers.Serializer):
+class GenresSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Genres
+        model = Genre
         fields = '__all__'
 
-class AuthorValidateSerializer(serializers.Serializer):
+class AuthorValidateSerializer(serializers.ModelSerializer):
     name = serializers.CharField(max_length=50)
     surname = serializers.CharField(max_length=50)
 
-    def validate_author(self, author_id):
-        try:
-            Authors.objects.get(id=author_id)
-        except Authors.DoesNotExist:
-            raise ValidationError('This author does not exists!')
-        return author_id
+    class Meta:
+        model = Author
+        fields = '__all__'
 
-class GenreValidateSerializer(serializers.Serializer):
+    def validate_author(self, author_pk):
+        try:
+            Author.objects.get(id=author_pk)
+        except Author.DoesNotExist:
+            raise ValidationError('This author does not exists!')
+        return author_pk
+
+class GenreValidateSerializer(serializers.ModelSerializer):
     genre_name = serializers.CharField(max_length=50)
 
+    class Meta:
+        model = Genre
+        fields = '__all__'
 
-    def validate_genre(self, genre_id):
+    def validate_genre(self, genre_pk):
         try:
-            Genres.objects.get(id=genre_id)
-        except Genres.DoesNotExist:
+            Genre.objects.get(id=genre_pk)
+        except Genre.DoesNotExist:
             raise ValidationError('This genre does not exists!')
-        return genre_id
+        return genre_pk
 
 class BooksValidateSerializer(serializers.ModelSerializer):
-    cover = serializers.IntegerField()
+    cover = serializers.ImageField(allow_null=True)
     name = serializers.CharField(max_length=100)
-    author = serializers.IntegerField()
     description = serializers.CharField(max_length=5000)
     pages = serializers.FloatField()
-    genre = serializers.IntegerField()
 
-    def validate_author(self, author_id):
+    class Meta:
+        model = Book
+        fields = '__all__'
+
+    def validate_author(self, author_name):
         try:
-            Authors.objects.get(id=author_id)
-        except Authors.DoesNotExist:
+            Author.objects.get(name=author_name)
+        except Author.DoesNotExist:
             raise ValidationError('This author does not exists!')
-        return author_id
+        return author_name
 
-    def validate_genre(self, genre_id):
+    def validate_genre(self, genre_name):
         try:
-            Genres.objects.get(id=genre_id)
-        except Genres.DoesNotExist:
+            Genre.objects.get(genre_name=genre_name)
+        except Genre.DoesNotExist:
             raise ValidationError('This genre does not exists!')
-        return genre_id
+        return genre_name
 
 

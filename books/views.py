@@ -1,17 +1,17 @@
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from .models import Books, Authors, Genres
+from .models import Book, Author, Genre
 from .serializers import BookSerializer, AuthorSerializer, GenresSerializer, AuthorValidateSerializer, BooksValidateSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
 class AuthorApiView(ListCreateAPIView):
-    queryset = Authors.objects.all()
+    queryset = Author.objects.all()
     serializer_class = AuthorSerializer
 
     def post(self, request, *args, **kwargs):
         if request.method == 'GET':
-            author = Authors.objects.all()
-            serializer = AuthorSerializer(author, many=True)
+            authors = Author.objects.all()
+            serializer = AuthorSerializer(authors, many=True)
             return Response(data=serializer.data)
         if request.method == 'POST':
             serializer = AuthorValidateSerializer(data=request.data)
@@ -20,57 +20,63 @@ class AuthorApiView(ListCreateAPIView):
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
             name = serializer.validated_data.get('name')
             surname = serializer.validated_data.get('surname')
-            author = Authors.objects.create(name=name, surname=surname)
-            author.save()
+            authors = Author.objects.create(name=name, surname=surname)
+            authors.save()
+            return Response(data={'message': 'Data received!',
+                           'authors': AuthorSerializer(authors).data},
+                     status=status.HTTP_201_CREATED)
 
 class GenreApiView(ListCreateAPIView):
-    queryset = Genres.objects.all()
+    queryset = Genre.objects.all()
     serializer_class = GenresSerializer
 
     def post(self, request, *args, **kwargs):
         if request.method == 'GET':
-            genre = Genres.objects.all()
+            genre = Genre.objects.all()
             serializer = GenresSerializer(genre, many=True)
             return Response(data=serializer.data)
         if request.method == 'POST':
-            serializer = AuthorValidateSerializer(data=request.data)
+            serializer =GenresSerializer(data=request.data)
             if not serializer.is_valid():
                 return Response(data=serializer.errors,
                                 status=status.HTTP_406_NOT_ACCEPTABLE)
-            name = serializer.validated_data.get('name')
-            surname = serializer.validated_data.get('surname')
-            author = Authors.objects.create(name=name, surname=surname)
-            author.save()
+            genre_name = serializer.validated_data.get('genre_name')
+            genre = Genre.objects.create(genre_name=genre_name,)
+            genre.save()
+
+            return Response(data={'message': 'Data received!',
+                           'genre': GenresSerializer(genre).data},
+                     status=status.HTTP_201_CREATED)
 
 
 class CatalogApiView(ListCreateAPIView):
-    queryset = Books.objects.all()
+    queryset = Book.objects.all()
     serializer_class = BookSerializer
 
     def post(self, request, *args, **kwargs):
         if request.method == 'GET':
-            book = Books.objects.all()
-            serializer = BookSerializer(book, many=True)
+            books = Book.objects.all()
+            serializer = BookSerializer(books, many=True)
             return Response(data=serializer.data)
-        elif request.method == 'POST':
+        if request.method == 'POST':
             serializer = BooksValidateSerializer(data=request.data)
             if not serializer.is_valid():
-                if not serializer.is_valid():
-                    return Response(data=serializer.errors,
-                                    status=status.HTTP_406_NOT_ACCEPTABLE)
-                cover = serializer.validated_data.get('cover')
-                name = serializer.validated_data.get('name')
-                author = serializer.validated_data.get('')
-                description = serializer.validated_data.get('description')
-                pages = serializer.validated_data.get('pages')
-                genre = serializer.validated_data.get('genre')
-                book = Authors.objects.create(name=name, cover=cover, author=author, description=description, pages=pages, genre=genre)
-                book.save()
-
-
+                return Response(data=serializer.errors,
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
+            name = serializer.validated_data.get('name')
+            cover = serializer.validated_data.get('cover')
+            author = serializer.validated_data.get('author')
+            description = serializer.validated_data.get('description')
+            pages = serializer.validated_data.get('pages')
+            genre = serializer.validated_data.get('genre')
+            books = Book.objects.create(name=name, cover=cover, author=author, description=description,
+                                          pages=pages, genre=genre)
+            return Response(data={'message': 'Data received!',
+                                  'books': BookSerializer(books).data},
+                            status=status.HTTP_201_CREATED)
 
 
 
 class CatalogDetailApiView(RetrieveUpdateDestroyAPIView):
-    queryset = Books.objects.all()
+    queryset = Book.objects.all()
     serializer_class = BookSerializer
