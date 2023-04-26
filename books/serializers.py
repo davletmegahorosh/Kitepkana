@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from .models import Books, Genres, Authors
-from rest_framework.exceptions import ValidationError
+from .models import Books
 
 
 class BookSerializer(serializers.ModelSerializer):
