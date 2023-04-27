@@ -151,3 +151,4 @@ def activate_user(request, uidb64, token):
 
     return render(request, 'users/activate-failed.html', {"user":user})
 
+
