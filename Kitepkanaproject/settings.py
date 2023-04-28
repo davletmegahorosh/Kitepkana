@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-
 from pathlib import Path
 import os
 import sys
@@ -47,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'books',
     'users',
+    'djoser',
 ]
 
 REST_FRAMEWORK = {
@@ -131,7 +131,7 @@ USE_TZ = True
     EMAIL CONFIG
 """
 
-EMAIL_FROM_USER=os.environ.get('EMAIL_FROM_USER')
+EMAIL_FROM_USER = os.environ.get('EMAIL_FROM_USER')
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = os.environ.get('EMAIL_FROM_USER')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
@@ -150,3 +150,4 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
