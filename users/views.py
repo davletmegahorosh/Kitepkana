@@ -1,23 +1,64 @@
 from rest_framework.response import Response
-from .serializers import UsersSerializer
-from django.contrib.auth import authenticate
-from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from rest_framework import status
+from .models import User
+from .serializers import UserSerializer
+from . import permissions
+from .utils import decode_jwt_token
+from rest_framework import exceptions
+from .utils import send_email
+from .utils import generate_verify_code
 
 
-class AuthorizationApiView(APIView):
+class RegisterView(APIView):
     def post(self, request):
-        serializer = UsersSerializer(data=request.data)
+        serializer = UserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = authenticate(
-            username=serializer.validated_data.get('username'),
-            password=serializer.validated_data.get('password')
-        )
+        email = serializer.validated_data.get('email')
+        verify_code = generate_verify_code()
+        send_email(email, verify_code)
+        serializer.save()
 
-        if user:
-            token, created = Token.objects.get_or_create(user=user)
-            return Response(data={'your key': token.key}, status=status.HTTP_200_OK)
-        return Response(data='Нам не удалось найти вашу учетную запись. '
-                             'Повторите попытку или создайте новый аккаунт.',
-                        status=status.HTTP_401_UNAUTHORIZED)
+        return Response(data=serializer.data)
+
+
+class LoginView(APIView):
+    def post(self, request):
+        username = request.data['username']
+        password = request.data['password']
+
+        user = User.objects.filter(username=username).first()
+        if user is None:
+            raise exceptions.AuthenticationFailed('User not Found')
+
+        if not user.check_password(password):
+            raise exceptions.AuthenticationFailed('Incorrect password')
+        token = decode_jwt_token(user)
+        response = Response()
+        response.data = {
+            "jwt": token,
+        }
+        response.set_cookie(key='jwt', value=token, httponly=True) # Токен добавляем в сookie
+        return response
+
+
+class LogoutView(APIView):
+    def post(self, request):
+        response = Response()
+        response.delete_cookie('jwt')
+        response.data = {
+            "message": "success"
+        }
+        return response
+
+    def delete(self, request):
+        return Response(data='You can delete')
+
+
+# Тестовая вьюшка
+class AllUserView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        print(request.user)
+        return Response(data='ok')
+

@@ -1,8 +1,9 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
-class Users(models.Model):
-    email = models.TextField()
-    username = models.CharField(max_length=20)
-    password = models.CharField(max_length=16)
-    is_admin = models.BooleanField()
+class User(AbstractUser):
+    email = models.CharField(max_length=255, unique=True)
+    verification_code = models.CharField(max_length=8, verbose_name='Код для подтверждения')
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = []
