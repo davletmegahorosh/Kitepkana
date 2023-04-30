@@ -8,15 +8,18 @@ class BookSerializer(serializers.ModelSerializer):
         model = Books
         fields = '__all__'
 
+
 class AuthorSerializer(serializers.Serializer):
     class Meta:
         model = Authors
         fields = '__all__'
 
+
 class GenresSerializer(serializers.Serializer):
     class Meta:
         model = Genres
         fields = '__all__'
+
 
 class AuthorValidateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=50)
@@ -28,6 +31,7 @@ class AuthorValidateSerializer(serializers.Serializer):
         except Authors.DoesNotExist:
             raise ValidationError('This author does not exists!')
         return author_id
+
 
 class GenreValidateSerializer(serializers.Serializer):
     genre_name = serializers.CharField(max_length=50)

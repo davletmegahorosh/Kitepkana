@@ -4,6 +4,7 @@ from admin.serializers import BookSerializer, AuthorSerializer, GenresSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
+
 class AuthorApiView(ListCreateAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
@@ -22,6 +23,7 @@ class AuthorApiView(ListCreateAPIView):
             surname = serializer.validated_data.get('surname')
             author = Authors.objects.create(name=name, surname=surname)
             author.save()
+
 
 class GenreApiView(ListCreateAPIView):
     queryset = Genres.objects.all()
