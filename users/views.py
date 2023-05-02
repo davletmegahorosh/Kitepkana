@@ -1,1 +1,1 @@
-# views clear
+from django.shortcuts import render
