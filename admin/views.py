@@ -1,6 +1,6 @@
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from books.models import Books, Authors, Genres
-from admin.serializers import BookSerializer, AuthorSerializer, GenresSerializer, AuthorValidateSerializer, BooksValidateSerializer
+from admin.serializers import BookSerializer, AuthorSerializer, GenresSerializer, AuthorValidateSerializer, BooksValidateSerializer, GenreValidateSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
@@ -22,6 +22,52 @@ class AuthorApiView(ListCreateAPIView):
             surname = serializer.validated_data.get('surname')
             author = Authors.objects.create(name=name, surname=surname)
             author.save()
+
+
+class AuthorDetailApiView(RetrieveUpdateDestroyAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+
+    def post(self, request, id):
+        try:
+            author = Authors.objects.get(id=id)
+        except Authors.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if request.method == 'PUT':
+            serializer = AuthorValidateSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(data=serializer.errors,
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
+            name = serializer.validated_data.get('name')
+            surname = serializer.validated_data.get('surname')
+            author = Authors.objects.create(name=name, surname=surname)
+            author.save()
+        elif request.method == 'DELETE':
+            author.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class GenreDetailApiView(RetrieveUpdateDestroyAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+
+    def post(self, request, id):
+        try:
+            genre = Genres.objects.get(id=id)
+        except Genres.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if request.method == 'PUT':
+            serializer = GenreValidateSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(data=serializer.errors,
+                                status=status.HTTP_406_NOT_ACCEPTABLE)
+            genre_name = serializer.validated_data.get('genre_name')
+            genre = Genres.objects.create(genre_name=genre_name)
+            genre.save()
+        elif request.method == 'DELETE':
+            genre.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class GenreApiView(ListCreateAPIView):
     queryset = Genres.objects.all()
@@ -66,3 +112,8 @@ class CatalogApiView(ListCreateAPIView):
                 genre = serializer.validated_data.get('genre')
                 book = Authors.objects.create(name=name, cover=cover, author=author, description=description, pages=pages, genre=genre)
                 book.save()
+
+
+# class CatalogDetailApiView(RetrieveUpdateDestroyAPIView):
+#     queryset = Books.objects.all()
+#     serializer_class = BookSerializer

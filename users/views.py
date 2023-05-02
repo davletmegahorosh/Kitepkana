@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from validate_email import validate_email
+# from validate_email import validate_email
 from .models import User
 from django.contrib.auth import authenticate, login, logout
 from django.urls import reverse
@@ -63,10 +63,10 @@ def registration(request):
                                  'Пароли не совпадают!')
             context['error'] = True
 
-        if not validate_email(email):
-            messages.add_message(request, messages.ERROR,
-                                 'Введите корректный адрес электронной почты!')
-            context['error'] = True
+        # if not validate_email(email):
+        #     messages.add_message(request, messages.ERROR,
+        #                          'Введите корректный адрес электронной почты!')
+        #     context['error'] = True
 
         if not username:
             messages.add_message(request, messages.ERROR,
