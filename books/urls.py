@@ -7,4 +7,5 @@ urlpatterns = [
     path('api/v1/catalog/<int:id>/', views.CatalogDetailApiView.as_view()),
     path('api/v1/author/', adminviews.AuthorApiView.as_view()),
     path('api/v1/genre/', adminviews.GenreApiView.as_view()),
+    path('api/v1/review/', views.ReviewApiView.as_view())
 ]
