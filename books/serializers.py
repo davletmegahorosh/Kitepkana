@@ -6,16 +6,16 @@ from rest_framework.exceptions import ValidationError
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Books
-        fields = '__all__'
+        fields = 'id name cover description pages get_author get_genre'.split(' ')
 
 
-class AuthorSerializer(serializers.Serializer):
+class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Authors
         fields = '__all__'
 
 
-class GenresSerializer(serializers.Serializer):
+class GenresSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genres
         fields = '__all__'
@@ -45,8 +45,8 @@ class GenreValidateSerializer(serializers.Serializer):
         return genre_id
 
 
-class BooksValidateSerializer(serializers.ModelSerializer):
-    cover = serializers.IntegerField()
+class BooksValidateSerializer(serializers.Serializer):
+    cover = serializers.ImageField()
     name = serializers.CharField(max_length=100)
     author = serializers.IntegerField()
     description = serializers.CharField(max_length=5000)

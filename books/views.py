@@ -1,19 +1,21 @@
 from rest_framework import status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework import generics
+from rest_framework import views
+from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from .models import Books, Genres, Authors
-from .serializers import BookSerializer, GenreValidateSerializer, GenresSerializer, BooksValidateSerializer, \
-    AuthorValidateSerializer, AuthorSerializer
+from .serializers import BookSerializer, GenreValidateSerializer, \
+    GenresSerializer, BooksValidateSerializer, AuthorValidateSerializer, AuthorSerializer
 
 
-class AuthorApiView(ListCreateAPIView):
+class AuthorApiView(generics.ListCreateAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
 
     def get(self, request, *args, **kwargs):
         author = Authors.objects.all()
-        serializer = AuthorSerializer(author, many=True)
-        return Response(data=serializer.data)
+        serializer = AuthorSerializer(author, many=True).data
+        return Response(data=serializer)
 
     def post(self, request, *args, **kwargs):
         serializer = AuthorValidateSerializer(data=request.data)
@@ -23,7 +25,7 @@ class AuthorApiView(ListCreateAPIView):
         return Response(data={'Author Created'}, status=status.HTTP_200_OK)
 
 
-class GenreApiView(ListCreateAPIView):
+class GenreApiView(generics.ListCreateAPIView):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
 
@@ -40,14 +42,14 @@ class GenreApiView(ListCreateAPIView):
         return Response(data={'Genre Created'}, status=status.HTTP_200_OK)
 
 
-class BookApiView(ListCreateAPIView):
+class BookApiView(generics.ListCreateAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
 
     def get(self, request, *args, **kwargs):
         book = Books.objects.all()
         serializer = BookSerializer(book, many=True).data
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data=serializer, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
         serializer = BooksValidateSerializer(data=request.data)
@@ -57,11 +59,15 @@ class BookApiView(ListCreateAPIView):
         return Response(data={'Book Created'}, status=status.HTTP_200_OK)
 
 
-class CatalogApiView(ListCreateAPIView):
-    queryset = Books.objects.all()
-    serializer_class = BookSerializer
+# class AuthorDetailView(views.APIView):
+#     def delete(self, request, id):
+#         author = get_object_or_404(Authors.objects.all(), id=id)
+#         author.delete()
+#         return Response(data={f"message: author with id {id} has been deleted"})
+#
+#     def update(self, request, id):
+#         author = get_object_or_404(Authors.objects.all(), id=id)
+#         author
 
 
-class CatalogDetailApiView(RetrieveUpdateDestroyAPIView):
-    queryset = Books.objects.all()
-    serializer_class = BookSerializer
+
