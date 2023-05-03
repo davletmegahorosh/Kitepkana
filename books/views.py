@@ -15,7 +15,6 @@ class CatalogDetailApiView(RetrieveUpdateDestroyAPIView):
 
 class ReviewApiView(RetrieveUpdateDestroyAPIView):
     queryset = Review.objects.all()
-    serializer_class = \
-        ReviewSerializer
+    serializer_class = ReviewSerializer
 
 
