@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from .models import Books, Genres, Authors
 from .serializers import BookSerializer, GenresSerializer, AuthorSerializer
 from rest_framework import views
+from rest_framework import permissions
+from .permissions_book import IsAdminOrReadonly, IsOwnerOrReadOnly
 """Views for create objects"""
 
 
@@ -28,6 +30,7 @@ class BookCreateView(generics.CreateAPIView):
 class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
+    permission_classes = (IsOwnerOrReadOnly,)
 
 
 class GenreDetailView(generics.RetrieveUpdateDestroyAPIView):
