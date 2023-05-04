@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import User
@@ -62,3 +63,6 @@ class AllUserView(APIView):
         print(request.user)
         return Response(data='ok')
 
+=======
+from django.shortcuts import render
+>>>>>>> Dev

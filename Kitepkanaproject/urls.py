@@ -1,18 +1,17 @@
 from django.contrib import admin
-from django.urls import path
-from books import views
-from admin import views as adminviews
+from django.urls import path, include, re_path
+# from django.views.generic import TemplateView      #Амир
 from Kitepkanaproject.settings import MEDIA_ROOT, MEDIA_URL
 from django.conf.urls.static import static
-from django.urls import include
-
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/catalog/', views.CatalogApiView.as_view()),
-    path('api/v1/catalog/<int:id>/', views.CatalogDetailApiView.as_view()),
-    path('api/v1/author/', adminviews.AuthorApiView.as_view()),
-    path('api/v1/genre/', adminviews.GenreApiView.as_view()),
-    path('', include('users.urls'))  # Эндпоинты указаны в urls.py приложения users
+    path('', include('books.urls')),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.jwt')),
 ]
 
 urlpatterns += static(MEDIA_URL, document_root=MEDIA_ROOT)
+
+
+# urlpatterns += [re_path(r'^.*', TemplateView.as_view(template_name='/'))]    #Амир
+# static(MEDIA_URL, document_root=MEDIA_ROOT)

@@ -1,8 +1,12 @@
+.gitignore
 .idea
 venv
-migrations
-
+.env
 __pycache__/
+admin.__pycache__/
+books.__pycache__/
+users.__pycache__/
+migrations
 db.sqlite3
 
 обложки
