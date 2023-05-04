@@ -6,10 +6,27 @@ from .serializers import BookSerializer, GenresSerializer, AuthorSerializer
 from rest_framework import views
 from rest_framework import permissions
 from .permissions_book import IsAdminOrReadonly, IsOwnerOrReadOnly
-"""Views for create objects"""
+
+
+""" Views for single objects. CRUD Management. These views for admin """
 
 
 class AuthorCreateView(generics.CreateAPIView):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorSerializer
+
+
+class AuthorDeleteView(generics.DestroyAPIView):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorSerializer
+
+
+class AuthorRetrieveView(generics.RetrieveAPIView):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorSerializer
+
+
+class AuthorUpdateView(generics.UpdateAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
 
@@ -19,26 +36,37 @@ class GenreCreateView(generics.CreateAPIView):
     serializer_class = GenresSerializer
 
 
+class GenreRetrieveView(generics.RetrieveAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+
+
+class GenreUpdateView(generics.UpdateAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+
+
+class GenreDeleteView(generics.DestroyAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+
+
 class BookCreateView(generics.CreateAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
 
 
-""" Views for single objects. CRUD Management. These views for admin """
+class BookRetrieveView(generics.RetrieveAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BookSerializer
 
 
-class AuthorDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Authors.objects.all()
-    serializer_class = AuthorSerializer
-    permission_classes = (IsOwnerOrReadOnly,)
+class BookUpdateView(generics.UpdateAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BookSerializer
 
 
-class GenreDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Genres.objects.all()
-    serializer_class = GenresSerializer
-
-
-class BookDetailView(generics.RetrieveUpdateDestroyAPIView):
+class BookDeleteView(generics.DestroyAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
 
@@ -78,6 +106,4 @@ class GenreDetailApiView(views.APIView):
         genre = Books.objects.filter(genre=data)
         serializer = BookSerializer(genre, many=True).data
         return Response(data={f"Жанр:  {data.genre_name}": serializer}, status=status.HTTP_200_OK)
-#
-#
-#
+
