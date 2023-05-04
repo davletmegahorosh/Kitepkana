@@ -7,67 +7,113 @@ from .models import Books, Genres, Authors
 from .serializers import BookSerializer, GenreValidateSerializer, \
     GenresSerializer, BooksValidateSerializer, AuthorValidateSerializer, AuthorSerializer
 
+""" Views for single objects. CRUD Management """
 
-class AuthorApiView(generics.ListCreateAPIView):
+
+# Authors +++++++
+class AuthorCreateView(generics.CreateAPIView):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorValidateSerializer
+
+
+class AuthorRetrieveView(generics.RetrieveAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
 
-    def get(self, request, *args, **kwargs):
-        author = Authors.objects.all()
-        serializer = AuthorSerializer(author, many=True).data
-        return Response(data=serializer)
 
-    def post(self, request, *args, **kwargs):
-        serializer = AuthorValidateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        author = Authors.objects.create(**serializer.validated_data)
-        author.save()
-        return Response(data={'Author Created'}, status=status.HTTP_200_OK)
+class AuthorUpdateView(generics.UpdateAPIView):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorValidateSerializer
 
 
-class GenreApiView(generics.ListCreateAPIView):
+class AuthorDestroyView(generics.DestroyAPIView):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorValidateSerializer
+
+
+# Genres +++++++
+
+class GenreCreateView(generics.CreateAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenreValidateSerializer
+
+
+class GenreRetrieveView(generics.RetrieveAPIView):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
 
-    def get(self, request, *args, **kwargs):
-        genre = Genres.objects.all()
-        serializer = GenresSerializer(genre, many=True).data
-        return Response(data=serializer, status=status.HTTP_200_OK)
 
-    def post(self, request, *args, **kwargs):
-        serializer = GenreValidateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        genre = Genres.objects.create(**serializer.validated_data)
-        genre.save()
-        return Response(data={'Genre Created'}, status=status.HTTP_200_OK)
+class GenreUpdateView(generics.UpdateAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenreValidateSerializer
 
 
-class BookApiView(generics.ListCreateAPIView):
+class GenreDestroyView(generics.DestroyAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenreValidateSerializer
+
+
+# Books +++++++
+
+class BookCreateView(generics.CreateAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BooksValidateSerializer
+
+
+class BookRetrieveView(generics.RetrieveAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
 
-    def get(self, request, *args, **kwargs):
-        book = Books.objects.all()
-        serializer = BookSerializer(book, many=True).data
-        return Response(data=serializer, status=status.HTTP_200_OK)
 
-    def post(self, request, *args, **kwargs):
-        serializer = BooksValidateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        book = Books.object.create(**serializer.validated_data)
-        book.save()
-        return Response(data={'Book Created'}, status=status.HTTP_200_OK)
+class BookUpdateView(generics.UpdateAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BooksValidateSerializer
 
 
-# class AuthorDetailView(views.APIView):
-#     def delete(self, request, id):
-#         author = get_object_or_404(Authors.objects.all(), id=id)
-#         author.delete()
-#         return Response(data={f"message: author with id {id} has been deleted"})
-#
-#     def update(self, request, id):
-#         author = get_object_or_404(Authors.objects.all(), id=id)
-#         author
+class BookDestroyView(generics.DestroyAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BooksValidateSerializer
 
 
+"""Views detail for single object. This views show detail info for user or admin"""
+
+
+class AuthorDetailApiView(views.APIView):
+    def get(self, request, pk):
+        data = get_object_or_404(Authors.objects.all(), id=pk)
+        author = Books.objects.filter(author=data)
+        serializer = BookSerializer(author, many=True).data
+        return Response(data={f"Автор:  {data.name}": serializer}, status=status.HTTP_200_OK)
+
+
+class GenreDetailApiView(views.APIView):
+    def get(self, request, pk):
+        data = get_object_or_404(Genres.objects.all(), id=pk)
+        genre = Books.objects.filter(genre=data)
+        serializer = BookSerializer(genre, many=True).data
+        return Response(data={f"Жанр:  {data.genre_name}": serializer}, status=status.HTTP_200_OK)
+
+
+""" Views for multiple objects"""
+
+
+class AuthorsListView(generics.ListAPIView):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorSerializer
+
+
+class GenresListView(generics.ListAPIView):
+    queryset = Genres.objects.all()
+    serializer_class = GenresSerializer
+
+
+class BookListView(generics.ListAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BookSerializer
+
+
+"""View for search objects"""
+
+class CustomSearch:
+    pass
 
