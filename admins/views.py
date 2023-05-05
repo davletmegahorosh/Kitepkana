@@ -6,6 +6,7 @@ from rest_framework import status
 from .models import AdminPanelModel
 
 
+
 class AuthorApiView(ListCreateAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
