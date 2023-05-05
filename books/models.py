@@ -37,6 +37,13 @@ class Books(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.CASCADE)
+    rate = models.IntegerField(choices=(
+        (1, '1'),
+        (2, '2'),
+        (3, '3'),
+        (4, '4'),
+        (5, '5'),
+    ), default=5)
 
     class Meta:
         ordering = ['cover', 'title', 'author']
@@ -51,3 +58,17 @@ class Books(models.Model):
     @property
     def genre_name(self):
         return str(self.genre)
+
+
+class Review(models.Model):
+    book = models.ForeignKey(Books, on_delete=models.CASCADE, null=True, blank=True, related_name='book')
+    review_text = models.TextField(null=True, blank=True, help_text='Оставь комментарии')
+    created = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, verbose_name="Пользователь", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.book)
+
+    @property
+    def get_user(self):
+        return str(self.user)

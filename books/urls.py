@@ -2,8 +2,9 @@ from django.urls import path, re_path
 from .views import AuthorCreateView, AuthorRetrieveView, AuthorUpdateView, AuthorDeleteView
 from .views import GenreCreateView, GenreRetrieveView, GenreUpdateView, GenreDeleteView
 from .views import BookCreateView, BookRetrieveView, BookUpdateView, BookDeleteView
-from .views import BookListView, GenreListView, AuthorListView, search
-from .views import GenreDetailApiView, AuthorDetailApiView
+from .views import BookListView, GenreListView, AuthorListView, ReviewListView, search
+from .views import GenreDetailApiView, AuthorDetailApiView, BookDetailApiView, ReviewCreateView, ReviewDeleteView,\
+    ReviewUpdateView
 
 urlpatterns = [
     path('api/v1/author/create/', AuthorCreateView.as_view()),
@@ -21,8 +22,13 @@ urlpatterns = [
     path('api/v1/books/', BookListView.as_view()),
     path('api/v1/genres/', GenreListView.as_view()),
     path('api/v1/authors/', AuthorListView.as_view()),
+    path('api/v1/reviews/', ReviewListView.as_view()),
     path('api/v1/author/detail/<int:pk>/', AuthorDetailApiView.as_view()),
     path('api/v1/genre/detail/<int:pk>/', GenreDetailApiView.as_view()),
+    path('api/v1/book/detail/<int:pk>/', BookDetailApiView.as_view()),
+    path('api/v1/review/create/', ReviewCreateView.as_view()),
+    path('api/v1/review/update/<int:pk>/', ReviewUpdateView.as_view()),
+    path('api/v1/review/delete/<int:pk>/', ReviewDeleteView.as_view()),
     path('api/v1/search/', search)
 
 ]

@@ -2,8 +2,8 @@ from django.db.models import Q
 from rest_framework import generics, status, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from .models import Books, Genres, Authors
-from .serializers import BookSerializer, GenresSerializer, AuthorSerializer
+from .models import Books, Genres, Authors, Review
+from .serializers import BookSerializer, GenresSerializer, AuthorSerializer, ReviewSerializer
 from rest_framework import views
 from rest_framework import permissions
 from .permissions_book import IsAdminOrReadonly, IsOwnerOrReadOnly
@@ -15,43 +15,43 @@ from rest_framework.decorators import api_view
 class AuthorCreateView(generics.CreateAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class AuthorDeleteView(generics.DestroyAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class AuthorRetrieveView(generics.RetrieveAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
-    # permission_classes = (IsAdminOrReadonly,)
+    permission_classes = (IsAdminOrReadonly,)
 
 
 class AuthorUpdateView(generics.UpdateAPIView):
     queryset = Authors.objects.all()
     serializer_class = AuthorSerializer
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class GenreCreateView(generics.CreateAPIView):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class GenreRetrieveView(generics.RetrieveAPIView):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    # permission_classes = (IsAdminOrReadonly,)
+    permission_classes = (IsAdminOrReadonly,)
 
 
 class GenreUpdateView(generics.UpdateAPIView):
     queryset = Genres.objects.all()
     serializer_class = GenresSerializer
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class GenreDeleteView(generics.DestroyAPIView):
@@ -63,25 +63,25 @@ class GenreDeleteView(generics.DestroyAPIView):
 class BookCreateView(generics.CreateAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class BookRetrieveView(generics.RetrieveAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
-    # permission_classes = (IsAdminOrReadonly,)
+    permission_classes = (IsAdminOrReadonly,)
 
 
 class BookUpdateView(generics.UpdateAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class BookDeleteView(generics.DestroyAPIView):
     queryset = Books.objects.all()
     serializer_class = BookSerializer
-    # permission_classes = (permissions.IsAdminUser,)
+    permission_classes = (permissions.IsAdminUser,)
 
 
 """Views for users. These views return list objects of models"""
@@ -105,6 +105,12 @@ class BookListView(generics.ListAPIView):
     permission_classes = (permissions.AllowAny,)
 
 
+class ReviewListView(generics.ListAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = (permissions.IsAdminUser,)
+
+
 """Views detail for single object. This views show detail info for user or admin"""
 
 
@@ -113,7 +119,8 @@ class AuthorDetailApiView(views.APIView):
         data = get_object_or_404(Authors.objects.all(), id=pk)
         author = Books.objects.filter(author=data)
         serializer = BookSerializer(author, many=True).data
-        return Response(data={f"Автор:  {data.name}": serializer}, status=status.HTTP_200_OK)
+        return Response(data={"Автор":data.name, "книги" : serializer},
+                        status=status.HTTP_200_OK)
 
 
 class GenreDetailApiView(views.APIView):
@@ -121,7 +128,21 @@ class GenreDetailApiView(views.APIView):
         data = get_object_or_404(Genres.objects.all(), id=pk)
         genre = Books.objects.filter(genre=data)
         serializer = BookSerializer(genre, many=True).data
-        return Response(data={f"Жанр:  {data.genre_name}": serializer}, status=status.HTTP_200_OK)
+        return Response(data={"Жанр":  {data.genre_name}, "Книги": serializer},
+                        status=status.HTTP_200_OK)
+
+
+class BookDetailApiView(views.APIView):
+    def get(self, request, pk):
+        data = get_object_or_404(Books.objects.all(), id=pk)
+        reviews = Review.objects.filter(book=data)
+        serializer_review = ReviewSerializer(reviews, many=True).data
+        book = BookSerializer(data).data
+        return Response(data={"O книге": book, "Отзывы": serializer_review},
+                        status=status.HTTP_200_OK)
+
+
+"""Search Function"""
 
 
 @api_view(['GET'])
@@ -137,3 +158,24 @@ def search(request):
         serializer = BookSerializer(books, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
     return Response(data='Not Found', status=status.HTTP_404_NOT_FOUND)
+
+
+"""Review Views. CRUD management"""
+
+
+class ReviewCreateView(generics.CreateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = (permissions.IsAuthenticated, )
+
+
+class ReviewUpdateView(generics.UpdateAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = (IsOwnerOrReadOnly, )
+
+
+class ReviewDeleteView(generics.DestroyAPIView):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = (permissions.IsAdminUser,)

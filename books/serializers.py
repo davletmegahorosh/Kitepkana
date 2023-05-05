@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Books, Genres, Authors
+from .models import Books, Genres, Authors, Review
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -8,7 +8,7 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Books
         fields = 'cover title summary pages author genre file genre_name author_name ' \
-                 'created_date update_date user'.split(' ')
+                 'created_date update_date user rate'.split(' ')
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -27,5 +27,10 @@ class GenresSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ReviewSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Review
+        fields = 'id get_user review_text created user book'.split(' ')
 
 
