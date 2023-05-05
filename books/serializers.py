@@ -7,7 +7,8 @@ class BookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Books
-        fields = '__all__'
+        fields = 'cover title summary pages author genre file genre_name author_name ' \
+                 'created_date update_date user'.split(' ')
 
 
 class AuthorSerializer(serializers.ModelSerializer):

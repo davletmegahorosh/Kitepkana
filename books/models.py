@@ -27,13 +27,13 @@ class Genres(models.Model):
 
 
 class Books(models.Model):
-    cover = models.ImageField(upload_to='')
+    cover = models.ImageField(upload_to='', null=True, blank=True)
     title = models.CharField(max_length=100)
-    author = models.ForeignKey(Authors, on_delete=models.CASCADE, null=True)
+    author = models.ForeignKey(Authors, on_delete=models.CASCADE, null=True, related_name='author')
     summary = models.TextField()
     pages = models.IntegerField()
-    genre = models.ForeignKey(Genres, on_delete=models.CASCADE, null=True)
-    file = models.FileField(upload_to='')
+    genre = models.ForeignKey(Genres, on_delete=models.CASCADE, null=True, related_name='genre')
+    file = models.FileField(upload_to='', null=True, blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now_add=True)
     user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.CASCADE)
@@ -43,3 +43,11 @@ class Books(models.Model):
 
     def __str__(self):
         return f"{str(self.title)}"
+
+    @property
+    def author_name(self):
+        return str(self.author)
+
+    @property
+    def genre_name(self):
+        return str(self.genre)
