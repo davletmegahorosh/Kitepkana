@@ -1,6 +1,6 @@
 from django.urls import path
 from books import views
-from admin import views as adminviews
+from admins import views as adminviews
 
 urlpatterns = [
     path('api/v1/catalog/', views.CatalogApiView.as_view()),

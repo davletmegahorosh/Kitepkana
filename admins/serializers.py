@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from books.models import Books, Genres, Authors
 from rest_framework.exceptions import ValidationError
-from .models import AdminPanelModel
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -68,9 +67,9 @@ class BooksValidateSerializer(serializers.ModelSerializer):
         return genre_id
 
 class AdminPanelSerializer(serializers.Serializer):
-    books = BookSerializer(many=True)
-    genres = GenresSerializer(many=True)
-    authors = AuthorSerializer(many=True)
+    books = serializers.PrimaryKeyRelatedField(queryset=Books.objects.all(), many=True)
+    genres = serializers.PrimaryKeyRelatedField(queryset=Genres.objects.all(), many=True)
+    authors = serializers.PrimaryKeyRelatedField(queryset=Authors.objects.all(), many=True)
     class Meta:
-        model = AdminPanelModel
-        fields = 'name books genres authors'.split()
+        model = None
+        fields = 'books authors genres'.split()

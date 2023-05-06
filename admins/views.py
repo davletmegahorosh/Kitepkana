@@ -1,10 +1,9 @@
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from books.models import Books, Authors, Genres
-from admins.serializers import BookSerializer, AuthorSerializer, GenresSerializer, AuthorValidateSerializer, BooksValidateSerializer, AdminPanelSerializer
+from admins.serializers import BookSerializer, AuthorSerializer, GenresSerializer, AuthorValidateSerializer, \
+    BooksValidateSerializer, AdminPanelSerializer
 from rest_framework.response import Response
 from rest_framework import status
-from .models import AdminPanelModel
-
 
 
 class AuthorApiView(ListCreateAPIView):
@@ -68,9 +67,20 @@ class CatalogApiView(ListCreateAPIView):
                 description = serializer.validated_data.get('description')
                 pages = serializer.validated_data.get('pages')
                 genre = serializer.validated_data.get('genre')
-                book = Authors.objects.create(name=name, cover=cover, author=author, description=description, pages=pages, genre=genre)
+                book = Authors.objects.create(name=name, cover=cover, author=author, description=description,
+                                              pages=pages, genre=genre)
                 book.save()
 
+
 class AdminPanelView(ListAPIView):
-    queryset = AdminPanelModel.objects.all()
-    serializer_class = AdminPanelSerializer
+    def get(self, request, **kwargs):
+        books = Books.objects.all()
+        authors = Authors.objects.all()
+        genres = Genres.objects.all()
+
+        serializer = AdminPanelSerializer({
+            'books': books,
+            'authors': authors,
+            'genres': genres,
+        })
+        return Response(serializer.data)

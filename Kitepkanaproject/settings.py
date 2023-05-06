@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'books',
     'users',
     'djoser',
+    'admins',
 ]
 
 REST_FRAMEWORK = {
@@ -153,9 +154,11 @@ EMAIL_USE_TLS = True
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, 'app', 'static'),
+    os.path.join(BASE_DIR, 'app', 'templates', 'static'),
     os.path.join(BASE_DIR, 'templates/static')
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
