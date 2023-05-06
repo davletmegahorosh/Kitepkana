@@ -73,3 +73,5 @@ class AdminPanelSerializer(serializers.Serializer):
     class Meta:
         model = None
         fields = 'books authors genres'.split()
+
+
