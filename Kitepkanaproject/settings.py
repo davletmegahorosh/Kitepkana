@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'books',
     'users',
     'djoser',
+    'admins'
 ]
 
 REST_FRAMEWORK = {
