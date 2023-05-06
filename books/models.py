@@ -72,3 +72,6 @@ class Review(models.Model):
     @property
     def get_user(self):
         return str(self.user)
+
+    def get_book(self):
+        return str(self.book)

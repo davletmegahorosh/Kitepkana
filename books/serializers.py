@@ -7,7 +7,7 @@ class BookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Books
-        fields = 'cover title summary pages author genre file genre_name author_name ' \
+        fields = 'id cover title summary pages author genre file genre_name author_name ' \
                  'created_date update_date user rate'.split(' ')
 
 
@@ -31,6 +31,6 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = 'id get_user review_text created user book'.split(' ')
+        fields = 'id get_user get_book review_text created user book'.split(' ')
 
 
