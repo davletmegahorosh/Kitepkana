@@ -35,7 +35,7 @@ class Books(models.Model):
     genre = models.ForeignKey(Genres, on_delete=models.CASCADE, null=True, related_name='genre')
     file = models.FileField(upload_to='', null=True, blank=True)
     created_date = models.DateTimeField(auto_now_add=True)
-    update_date = models.DateTimeField(auto_now_add=True)
+    update_date = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, verbose_name='Пользователь', on_delete=models.CASCADE)
     rate = models.IntegerField(choices=(
         (1, '1'),
