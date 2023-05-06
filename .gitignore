@@ -1,6 +1,6 @@
 .gitignore
 .idea
-venv
+myvenv
 .env
 __pycache__/
 admin.__pycache__/
