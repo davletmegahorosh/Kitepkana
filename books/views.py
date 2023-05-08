@@ -2,12 +2,13 @@ from django.db.models import Q
 from rest_framework import generics, status, filters
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-from .models import Books, Genres, Authors, Review
-from .serializers import BookSerializer, GenresSerializer, AuthorSerializer, ReviewSerializer
+from .models import Books, Genres, Authors, Review, Favorite
+from .serializers import BookSerializer, GenresSerializer, AuthorSerializer, ReviewSerializer, FavoriteCreateSerializer
 from rest_framework import views
 from rest_framework import permissions
 from .permissions_book import IsAdminOrReadonly, IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
+from django.contrib.auth.models import User
 
 """ Views for single objects. CRUD Management. These views for admin """
 
@@ -179,3 +180,7 @@ class ReviewDeleteView(generics.DestroyAPIView):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = (permissions.IsAdminUser,)
+
+class FavoriteBooksView(generics.CreateAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FavoriteCreateSerializer
