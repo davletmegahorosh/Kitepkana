@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Books, Genres, Authors, Review
+from .models import Books, Genres, Authors, Review, Favorite
 
 
 class BookSerializer(serializers.ModelSerializer):
@@ -34,3 +34,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = 'id get_user get_book review_text created user book'.split(' ')
 
 
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = '__all__'
+
+class FavoriteCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = ('book', )
+    def create(self, validated_data):
+        book = validated_data['book']
+        user = self.context['request'].user
+        favorite = Favorite.objects.create(user=user, book=book)
+        return favorite
