@@ -65,7 +65,7 @@ class Review(models.Model):
     book = models.ForeignKey(Books, on_delete=models.CASCADE, null=True, blank=True, related_name='book')
     review_text = models.TextField(null=True, blank=True, help_text='Оставь комментарии')
     created = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(user, verbose_name="Пользователь", on_delete=models.CASCADE)
+    user = models.ForeignKey(User, verbose_name="Пользователь", on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.book)
@@ -78,7 +78,7 @@ class Review(models.Model):
         return str(self.book)
 
 class Favorite(models.Model):
-    user = models.ForeignKey('User1', on_delete=models.CASCADE)
-    book = models.ForeignKey('Books', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Books, on_delete=models.CASCADE)
     def __str__(self):
         return self.user.username + " borrowed " + self.book.title

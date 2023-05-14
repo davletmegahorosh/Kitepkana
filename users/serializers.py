@@ -14,4 +14,18 @@ class UserSerializer(UserCreateSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = 'user_photo username'.split()
+        fields = 'user_photo username first_name last_name gender'.split()
+
+    def validate_first_name(self, value):
+        if len(value.strip()) > 100:
+            raise serializers.ValidationError('Имя не должно превышать больше 100 символов')
+        if not value.replace(' ', '').isalpha():
+            raise serializers.ValidationError('Имя должно состоять только из букв')
+        return value
+
+    def validate_last_name(self, value):
+        if len(value.strip()) > 100:
+            raise serializers.ValidationError('Фамилия не должна превышать больше 100 символов')
+        if not value.replace(' ', '').isalpha():
+            raise serializers.ValidationError('Фамилия должна состоять только из букв')
+        return value
