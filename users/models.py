@@ -44,3 +44,20 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+
+class Profile(models.Model):
+    '''Профиль пользователя'''
+    user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
+    user_photo = models.ImageField(null=True, blank=True)
+    username = models.CharField(max_length=30)
+
+
+    def __str__(self):
+        return self.username
+
+    def save(self, *args, **kwargs):
+        if self.user:
+            self.username = self.user.username
+        super().save(*args, **kwargs)
+
+
