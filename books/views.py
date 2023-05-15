@@ -1,14 +1,16 @@
 from django.db.models import Q
-from rest_framework import generics, status, filters
+from django.http import Http404
+from rest_framework import generics, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from .models import Books, Genres, Authors, Review, Favorite
-from .serializers import BookSerializer, GenresSerializer, AuthorSerializer, ReviewSerializer, FavoriteCreateSerializer
+from .serializers import BookSerializer, GenresSerializer, AuthorSerializer, ReviewSerializer, FavoriteCreateSerializer, \
+    FavoriteSerializer
 from rest_framework import views
 from rest_framework import permissions
 from .permissions_book import IsAdminOrReadonly, IsOwnerOrReadOnly
 from rest_framework.decorators import api_view
-from django.contrib.auth.models import User
+from rest_framework.views import APIView
 
 """ Views for single objects. CRUD Management. These views for admin """
 
@@ -181,6 +183,18 @@ class ReviewDeleteView(generics.DestroyAPIView):
     serializer_class = ReviewSerializer
     permission_classes = (permissions.IsAdminUser,)
 
+
 class FavoriteBooksView(generics.CreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = FavoriteCreateSerializer
+
+
+class FavoriteListView(APIView):
+    permission_classes = (permissions.IsAuthenticated, )
+
+    def get(self, request):
+        queryset = Favorite.objects.filter(user=request.user.id)
+        if queryset:
+            serializer = FavoriteSerializer(queryset, many=True)
+            return Response(data=serializer.data)
+        raise Http404

@@ -77,8 +77,13 @@ class Review(models.Model):
     def get_book(self):
         return str(self.book)
 
+
 class Favorite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     book = models.ForeignKey(Books, on_delete=models.CASCADE)
+
     def __str__(self):
         return self.user.username + " borrowed " + self.book.title
+
+    def book_title(self):
+        return str(self.book.title)

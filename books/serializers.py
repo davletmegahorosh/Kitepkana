@@ -37,12 +37,14 @@ class ReviewSerializer(serializers.ModelSerializer):
 class FavoriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
-        fields = '__all__'
+        fields = 'book user book_title'.split(' ')
+
 
 class FavoriteCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Favorite
         fields = ('book', )
+
     def create(self, validated_data):
         book = validated_data['book']
         user = self.context['request'].user
