@@ -4,7 +4,7 @@ from .views import GenreCreateView, GenreRetrieveView, GenreUpdateView, GenreDel
 from .views import BookCreateView, BookRetrieveView, BookUpdateView, BookDeleteView
 from .views import BookListView, GenreListView, AuthorListView, ReviewListView, search
 from .views import GenreDetailApiView, AuthorDetailApiView, BookDetailApiView, ReviewCreateView, ReviewDeleteView,\
-    ReviewUpdateView, FavoriteBooksView
+    ReviewUpdateView, FavoriteBooksView, FavoriteListView
 
 urlpatterns = [
     path('api/v1/author/create/', AuthorCreateView.as_view()),
@@ -30,7 +30,8 @@ urlpatterns = [
     path('api/v1/review/update/<int:pk>/', ReviewUpdateView.as_view()),
     path('api/v1/review/delete/<int:pk>/', ReviewDeleteView.as_view()),
     path('api/v1/search/', search),
-    path('api/v1/book/detail/<int:pk>/', FavoriteBooksView.as_view()),
+    path('api/v1/book/favorite/create/', FavoriteBooksView.as_view()),
+    path('api/v1/book/favorites/', FavoriteListView.as_view())
 
 ]
 
