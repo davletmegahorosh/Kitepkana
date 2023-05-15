@@ -9,7 +9,7 @@ from .views import GenreDetailApiView, AuthorDetailApiView, BookDetailApiView, R
 urlpatterns = [
     path('api/v1/author/create/', AuthorCreateView.as_view()),
     path('api/v1/author/retrieve/<int:pk>/', AuthorRetrieveView.as_view()),
-    path('api/v1/author/update/<int:pk>/', AuthorUpdateView.as_view(), ),
+    path('api/v1/author/update/<int:pk>/', AuthorUpdateView.as_view()),
     path('api/v1/author/delete/<int:pk>/', AuthorDeleteView.as_view()),
     path('api/v1/genre/create/', GenreCreateView.as_view()),
     path('api/v1/genre/retrieve/<int:pk>/', GenreRetrieveView.as_view()),
