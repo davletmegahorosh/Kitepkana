@@ -3,25 +3,19 @@ from .models import Books, Genres, Authors, Review, Favorite
 
 
 class BookSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
     class Meta:
         model = Books
         fields = 'id cover title summary pages author genre file genre_name author_name ' \
-                 'created_date update_date user rate'.split(' ')
+                 'created_date update_date rate'.split(' ')
 
 
 class AuthorSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
     class Meta:
         model = Authors
         fields = '__all__'
 
 
 class GenresSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
-
     class Meta:
         model = Genres
         fields = '__all__'
