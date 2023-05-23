@@ -26,6 +26,8 @@ class BaseViewSet(CreateModelMixin,
         if self.action == 'destroy' or self.action == 'update' \
                 or self.action == 'create' or self.action == 'partial_update':
             permission_classes = [IsAdminUser]
+        elif self.action == 'retrieve':
+            permission_classes = [IsAuthenticated]
         else:
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
@@ -89,11 +91,12 @@ class ReviewViewSet(BaseViewSet):
 
     def get_permissions(self):
 
-        if self.action == 'create':
+        if self.action == 'create' or self.action == 'retrieve':
             permission_classes = [IsAuthenticated]
         elif self.action == 'destroy' or self.action == 'update' \
                 or self.action == 'partial_update':
             permission_classes = [IsAdminUser]
+
         else:
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
