@@ -3,7 +3,8 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, username, password=None, user_photo=None, **extra_fields):
+    def create_user(self, email, username, password=None, user_photo=None,
+                    first_name=None, last_name=None, gender=None, **extra_fields):
         if not email:
             raise ValueError('Введите действительный адрес электронной почты')
 
@@ -14,12 +15,14 @@ class UserManager(BaseUserManager):
         user.save()
 
         '''Создание профиля'''
-        profile = Profile.objects.create(user=user, user_photo=user_photo, username=username)
+        profile = Profile.objects.create(user=user, user_photo=user_photo, username=username,
+                                         first_name=first_name, last_name=last_name, gender=gender)
         profile.save()
 
         return user
 
-    def create_superuser(self, email, username, password=None, user_photo=None, **extra_fields):
+    def create_superuser(self, email, username, password=None, user_photo=None,
+                         first_name=None, last_name=None, gender=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
 
@@ -29,7 +32,8 @@ class UserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError('Superuser has to have superuser being True')
 
-        return self.create_user(email=email, username=username, password=password, user_photo=user_photo, **extra_fields)
+        return self.create_user(email=email, username=username, password=password, user_photo=user_photo,
+                                first_name=first_name, last_name=last_name, gender=gender, **extra_fields)
 
 
 
@@ -58,8 +62,7 @@ class Profile(models.Model):
     username = models.CharField(max_length=30)
     first_name = models.CharField(null=True, blank=True, max_length=100)
     last_name = models.CharField(null=True, blank=True, max_length=100)
-    gender = models.CharField(default="неизвестен")
-
+    gender = models.CharField(default="неизвестен", max_length=15, null=True)
 
     def __str__(self):
         return self.username
@@ -68,6 +71,7 @@ class Profile(models.Model):
         if self.user_id and not self.username:
             self.username = self.user.username
         super().save(*args, **kwargs)
+
 
 
 
