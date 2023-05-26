@@ -58,7 +58,7 @@ class Profile(models.Model):
     username = models.CharField(max_length=30)
     first_name = models.CharField(null=True, blank=True, max_length=100)
     last_name = models.CharField(null=True, blank=True, max_length=100)
-    gender = models.CharField(default="неизвестен")
+    gender = models.CharField(max_length = 255,default="неизвестен")
 
 
     def __str__(self):
