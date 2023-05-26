@@ -1,6 +1,6 @@
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from books.models import Books, Authors, Genres
-from admins.serializers import BookSerializer, AuthorSerializer, GenresSerializer, AuthorValidateSerializer, \
+from apps.books.models import Books, Authors, Genres
+from apps.admins.serializers import BookSerializer, AuthorSerializer, GenresSerializer, AuthorValidateSerializer, \
     BooksValidateSerializer, AdminPanelSerializer
 from rest_framework.response import Response
 from rest_framework import status
