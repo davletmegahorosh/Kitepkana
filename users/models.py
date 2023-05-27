@@ -59,7 +59,7 @@ class Profile(models.Model):
     '''Профиль пользователя'''
     user = models.OneToOneField(User, null=True, on_delete=models.CASCADE)
     user_photo = models.ImageField(null=True, blank=True)
-    username = models.CharField(max_length=30)
+    username = models.CharField(max_length=30, null=True, blank=True)
     first_name = models.CharField(null=True, blank=True, max_length=100)
     last_name = models.CharField(null=True, blank=True, max_length=100)
     gender = models.CharField(default="неизвестен", max_length=15, null=True)
@@ -71,7 +71,6 @@ class Profile(models.Model):
         if self.user_id and not self.username:
             self.username = self.user.username
         super().save(*args, **kwargs)
-
 
 
 
