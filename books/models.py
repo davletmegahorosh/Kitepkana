@@ -16,11 +16,15 @@ class Authors(models.Model):
         return self.name
 
 
+class SimilarGenre(models.Model):
+    simil_name = models.CharField(max_length=100, null=True)
+
+
 class Genres(models.Model):
     genre_name = models.CharField(
         max_length=50,
         help_text='Вводи название жанра(Например, Хоррор, Романтика и.т.д')
-
+    alike_genre = models.ForeignKey(SimilarGenre, on_delete=models.CASCADE, related_name='alike_genre', null=True)
     def __str__(self):
         return self.genre_name
 
@@ -84,3 +88,38 @@ class Favorite(models.Model):
 
     def book_title(self):
         return str(self.book.title)
+
+
+class ReadingBookMark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
+    book = models.ForeignKey(Books, on_delete=models.CASCADE, null=True)
+    bookmarked_date = models.DateTimeField(auto_now_add=True, null=True)
+
+    def __str__(self):
+        return f'{self.user.username} bookmarked {self.book.title}'
+
+
+class WillReadBookMark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Books, on_delete=models.CASCADE)
+    bookmarked_date = models.DateTimeField(auto_now_add=True, null=True)
+
+    def __str__(self):
+        return f'{self.user.username} bookmarked {self.book.title}'
+
+
+class FinishBookMark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Books, on_delete=models.CASCADE)
+    bookmarked_date = models.DateTimeField(auto_now_add=True, null=True)
+
+    def __str__(self):
+        return f'{self.user.username} bookmarked {self.book.title}'
+
+
+
+
+
+
+
+

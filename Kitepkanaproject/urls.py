@@ -12,6 +12,6 @@ urlpatterns = [
     path('', include('users.urls')),
 ]
 
-
-urlpatterns += [re_path(r'^.*', TemplateView.as_view(template_name='/'))]
-static(MEDIA_URL, document_root=MEDIA_ROOT)
+urlpatterns += static(MEDIA_URL, document_root=MEDIA_ROOT)
+# urlpatterns += [re_path(r'^.*', TemplateView.as_view(template_name='/'))]
+# static(MEDIA_URL, document_root=MEDIA_ROOT)
