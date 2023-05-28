@@ -16,9 +16,25 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 
 class GenresSerializer(serializers.ModelSerializer):
+    similar_name = serializers.SerializerMethodField()
     class Meta:
         model = Genres
-        fields = '__all__'
+        fields = ('genre_name', 'alike_genre', 'similar_name')
+    def get_similar_name(self, genres):
+        similar_genres_list = [*genres.alike_genre]
+
+        return similar_genres_list
+
+
+
+
+
+
+
+
+
+
+
 
 
 class ReviewSerializer(serializers.ModelSerializer):

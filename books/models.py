@@ -24,7 +24,7 @@ class Genres(models.Model):
     genre_name = models.CharField(
         max_length=50,
         help_text='Вводи название жанра(Например, Хоррор, Романтика и.т.д')
-    alike_genre = models.ForeignKey(SimilarGenre, on_delete=models.CASCADE, related_name='alike_genre', null=True)
+    alike_genre = models.ManyToManyField(SimilarGenre, related_name='alike_genre', null=True)
     def __str__(self):
         return self.genre_name
 
