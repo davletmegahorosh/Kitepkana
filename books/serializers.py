@@ -5,8 +5,7 @@ from .models import Books, Genres, Authors, Review, Favorite
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Books
-        fields = 'id cover title summary pages author genre file genre_name author_name ' \
-                 'created_date update_date rate'.split(' ')
+        fields = 'id cover title summary pages author genre file genre_name author_name rate'.split(' ')
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -25,7 +24,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = 'id get_user get_book review_text created user book'.split(' ')
+        fields = 'id get_user get_book review_text created update user book'.split(' ')
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

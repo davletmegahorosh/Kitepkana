@@ -43,9 +43,9 @@ class AuthorViewSet(BaseViewSet):
     def retrieve(self, request, pk=None):
         author = get_object_or_404(Authors.objects.all(), id=pk)
         books = Books.objects.filter(author=author)
-        serializer_autor = AuthorSerializer(author).data
+        serializer_author = AuthorSerializer(author).data
         serializer_books = BookSerializer(books, many=True).data
-        data = {"Автор": serializer_autor, "книги": serializer_books}
+        data = {"Автор": serializer_author, "книги": serializer_books}
         return Response(data=data,
                         status=status.HTTP_200_OK)
 
