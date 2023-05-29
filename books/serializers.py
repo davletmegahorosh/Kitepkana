@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 
+
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Books
@@ -15,15 +16,20 @@ class AuthorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class SimilarGenreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SimilarGenre
+        fields = '__all__'
+
+
 class GenresSerializer(serializers.ModelSerializer):
-    similar_name = serializers.SerializerMethodField()
+    genres = SimilarGenreSerializer(many=True)
+
     class Meta:
         model = Genres
-        fields = ('genre_name', 'alike_genre', 'similar_name')
-    def get_similar_name(self, genres):
-        similar_genres_list = [*genres.alike_genre]
+        fields = ('genre_name', 'genres')
 
-        return similar_genres_list
 
 
 
@@ -80,9 +86,4 @@ class FinishBookMarkSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SimilarGenreSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SimilarGenre
-        fields = '__all__'
 

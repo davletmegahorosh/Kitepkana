@@ -151,8 +151,6 @@ class FavoriteViewSet(viewsets.GenericViewSet,
         raise Http404
 
 
-
-
 class CharFilterInFilter(filters.BaseInFilter, filters.CharFilter):
     pass
 
@@ -227,7 +225,34 @@ class FinishBookMarkAPIView(ListCreateAPIView):
         serializer.save(user=self.request.user)
 
 
-
 class SimilarGenreView(ListAPIView):
     queryset = SimilarGenre.objects.all()
     serializer_class = SimilarGenreSerializer
+
+
+class GenreSuggestView(ListAPIView):
+    serializer_class = BookSerializer
+    def get_queryset(self):
+        query = self.request.query_params.get('query', '')
+        if query:
+            return Books.objects.filter(genre__genre_name__startswith=query)[:5]
+        return Books.objects.none()
+
+
+class TitleSuggestView(ListAPIView):
+    serializer_class = BookSerializer
+    def get_queryset(self):
+        query = self.request.query_params.get('query', '')
+        if query:
+            return Books.objects.filter(title__startswith=query)[:5]
+        return Books.objects.none()
+
+
+class AuthorSuggestView(ListAPIView):
+    serializer_class = BookSerializer
+    def get_queryset(self):
+        query = self.request.query_params.get('query', '')
+        if query:
+            return Books.objects.filter(author__name__startswith=query)[:5]
+        return Books.objects.none()
+

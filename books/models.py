@@ -16,17 +16,22 @@ class Authors(models.Model):
         return self.name
 
 
-class SimilarGenre(models.Model):
-    simil_name = models.CharField(max_length=100, null=True)
 
 
 class Genres(models.Model):
     genre_name = models.CharField(
         max_length=50,
         help_text='Вводи название жанра(Например, Хоррор, Романтика и.т.д')
-    alike_genre = models.ManyToManyField(SimilarGenre, related_name='alike_genre', null=True)
     def __str__(self):
         return self.genre_name
+
+
+class SimilarGenre(models.Model):
+    simil_name = models.CharField(max_length=100, null=True)
+    genre = models.ForeignKey(Genres, on_delete=models.CASCADE, null=True, related_name='genres')
+
+    def __str__(self):
+        return self.simil_name
 
 
 class Books(models.Model):
