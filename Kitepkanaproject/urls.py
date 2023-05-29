@@ -3,6 +3,7 @@ from django.urls import path, include, re_path
 from Kitepkanaproject.settings import MEDIA_ROOT, MEDIA_URL
 from django.conf.urls.static import static
 from django.views.generic import TemplateView
+from .yasg import urlpatterns as url_yasg
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -12,6 +13,7 @@ urlpatterns = [
     path('', include('users.urls')),
 ]
 
+urlpatterns+=url_yasg
 
 urlpatterns += [re_path(r'^.*', TemplateView.as_view(template_name='/'))]
 static(MEDIA_URL, document_root=MEDIA_ROOT)
