@@ -3,7 +3,7 @@ from users.models import User
 # from django.contrib.auth.models import User
 
 
-class Authors(models.Model):
+class Author(models.Model):
     name = models.CharField(max_length=50)
     surname = models.CharField(max_length=50)
     date_of_birth = models.DateField(null=True, blank=True)
@@ -16,15 +16,22 @@ class Authors(models.Model):
         return self.name
 
 
+<<<<<<< HEAD
 class Genres(models.Model):
     genre_name = models.CharField(
         max_length=50,
         help_text='Вводи название жанра(Например, Хоррор, Романтика и.т.д')
+=======
+class Genre(models.Model):
+    genre_name = models.CharField(max_length=50)
+
+>>>>>>> 87932bde6fb07ab19d812637aa03a6c25c48eb2a
 
     def __str__(self):
         return self.genre_name
 
 
+<<<<<<< HEAD
 class Books(models.Model):
     cover = models.ImageField(upload_to='', null=True, blank=True)
     title = models.CharField(max_length=100)
@@ -45,6 +52,15 @@ class Books(models.Model):
 
     class Meta:
         ordering = ['cover', 'title', 'author']
+=======
+class Book(models.Model):
+    cover = models.ImageField(null=True)
+    name = models.CharField(max_length=100)
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    description = models.CharField(max_length=150)
+    pages = models.FloatField()
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+>>>>>>> 87932bde6fb07ab19d812637aa03a6c25c48eb2a
 
     def __str__(self):
         return f"{str(self.title)}"

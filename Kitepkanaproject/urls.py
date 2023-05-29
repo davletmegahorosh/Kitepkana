@@ -7,10 +7,17 @@ from .yasg import urlpatterns as url_yasg
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+<<<<<<< HEAD
     path('', include('books.urls')),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
     path('', include('users.urls')),
+=======
+    path('api/v1/catalog/', views.CatalogApiView.as_view()),
+    path('api/v1/catalog/<int:pk>/', views.CatalogDetailApiView.as_view()),
+    path('api/v1/author/', views.AuthorApiView.as_view()),
+    path('api/v1/genre/', views.GenreApiView.as_view())
+>>>>>>> 87932bde6fb07ab19d812637aa03a6c25c48eb2a
 ]
 
 urlpatterns+=url_yasg
