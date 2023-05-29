@@ -1,154 +1,140 @@
 from django.db.models import Q
 from django.http import Http404
-from rest_framework import status
+from rest_framework import status, generics, mixins
 from rest_framework.generics import get_object_or_404, ListAPIView, ListCreateAPIView
-from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre
-from .serializers import BookSerializer, GenresSerializer, AuthorSerializer, ReviewSerializer, FavoriteCreateSerializer, \
-    FavoriteSerializer, SimilarGenreSerializer
+from .permissions_book import IsOwner
+from .serializers import BookSerializer, GenresSerializer,ReviewSerializer, FavoriteCreateSerializer, \
+    FavoriteSerializer, SimilarGenreSerializer, CreateRatingSerializer
 from rest_framework import viewsets
-from rest_framework.decorators import api_view, action
-from rest_framework.mixins import CreateModelMixin, UpdateModelMixin, DestroyModelMixin, ListModelMixin
-from rest_framework.viewsets import GenericViewSet
 from random import sample
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 from .serializers import ReadingBookMarkSerializer, WillReadBookMarkSerializer, FinishBookMarkSerializer
-""" Views for single objects. CRUD Management. These views for admin """
+from .service import get_client_username
+from .serializers import AuthorListSerializer, AuthorDetailSerializer, GenreListSerializer
+from .serializers import GenreListSerializer, GenreDetailSerializer, BookListSerializer
+from .serializers import BookDetailSerializer, BookSimpleSerializer
+from django.db import models
 
 
-class BaseViewSet(CreateModelMixin,
-                  UpdateModelMixin,
-                  DestroyModelMixin,
-                  ListModelMixin,
-                  GenericViewSet,
-                  viewsets.ViewSet):
-    def get_permissions(self):
-        if self.action == 'destroy' or self.action == 'update' \
-                or self.action == 'create' or self.action == 'partial_update':
-            permission_classes = [IsAdminUser]
-        elif self.action == 'retrieve':
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [AllowAny]
-        return [permission() for permission in permission_classes]
-
-    def retrieve(self, request, pk=None):
-        pass
-
-
-class AuthorViewSet(BaseViewSet):
+class AuthorListView(generics.GenericAPIView,
+                     mixins.ListModelMixin):
     queryset = Authors.objects.all()
-    serializer_class = AuthorSerializer
+    serializer_class = AuthorListSerializer
+    permission_classes = (AllowAny, )
 
-    def retrieve(self, request, pk=None):
-        author = get_object_or_404(Authors.objects.all(), id=pk)
-        books = Books.objects.filter(author=author)
-        serializer_autor = AuthorSerializer(author).data
-        serializer_books = BookSerializer(books, many=True).data
-        data = {"Автор": serializer_autor, "книги": serializer_books}
-        return Response(data=data,
-                        status=status.HTTP_200_OK)
+    def get(self, request: Request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
 
-class GenreViewSet(BaseViewSet):
+class AuthorDetailView(generics.GenericAPIView,
+                       mixins.RetrieveModelMixin):
+    queryset = Authors.objects.all()
+    serializer_class = AuthorDetailSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request: Request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+
+class GenreListView(generics.GenericAPIView,
+                    mixins.ListModelMixin):
     queryset = Genres.objects.all()
-    serializer_class = GenresSerializer
+    serializer_class = GenreListSerializer
+    permission_classes = (AllowAny, )
 
-    def retrieve(self, request, pk=None):
-        genre = get_object_or_404(Genres.objects.all(), id=pk)
-        books = Books.objects.filter(genre=genre)
-        serializer_genre = GenresSerializer(genre).data
-        serializer_books = BookSerializer(books, many=True).data
-        data = {"Жанр": serializer_genre, "Книги": serializer_books}
-        return Response(data=data,
-                        status=status.HTTP_200_OK)
+    def get(self, request: Request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
 
-class BookViewSet(BaseViewSet):
+class GenreDetailView(generics.GenericAPIView,
+                      mixins.RetrieveModelMixin):
+    queryset = Genres.objects.all()
+    serializer_class = GenreDetailSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request: Request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+
+class BookListView(generics.GenericAPIView,
+                    mixins.ListModelMixin):
     queryset = Books.objects.all()
-    serializer_class = BookSerializer
+    serializer_class = BookListSerializer
+    permission_classes = (AllowAny, )
 
-    def retrieve(self, request, pk=None):
-        book = get_object_or_404(Books.objects.all(), id=pk)
-        reviews = Review.objects.filter(book=book)
-        serializer_book = BookSerializer(book).data
-        serializer_reviews = ReviewSerializer(reviews, many=True).data
-        data = {'Книга': serializer_book, "Отзывы": serializer_reviews}
-        return Response(data=data,
-                        status=status.HTTP_200_OK)
+    def get(self, request: Request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
 
-    @action(methods=['get'], detail=False)
-    def recommended_books(self, request):
-        all_books = Books.objects.all()
-        recommended = sample(list(all_books), 3)
-        serializer = BookSerializer(recommended, many=True)
-        return Response(data=serializer.data)
+    def get_queryset(self):
+        books = Books.objects.annotate(
+            middle_star=models.Sum(models.F('ratings__star__value'))/ models.Count(models.F('ratings'))
+        )
+        return books
 
 
-class ReviewViewSet(BaseViewSet):
+class BookDetailView(generics.GenericAPIView,
+                      mixins.RetrieveModelMixin):
+    queryset = Books.objects.all()
+    serializer_class = BookDetailSerializer
+    permission_classes = (IsAuthenticated, )
+
+    def get(self, request: Request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+    def get_queryset(self):
+        books = Books.objects.annotate(
+            middle_star = models.Sum(models.F('ratings__star__value'))/ models.Count(models.F('ratings'))
+        )
+
+        return books
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
-
-    def get_permissions(self):
-
-        if self.action == 'create' or self.action == 'retrieve':
-            permission_classes = [IsAuthenticated]
-        elif self.action == 'destroy' or self.action == 'update' \
-                or self.action == 'partial_update':
-            permission_classes = [IsAdminUser]
-
-        else:
-            permission_classes = [AllowAny]
-        return [permission() for permission in permission_classes]
-
-    def retrieve(self, request, pk=None):
-        review = get_object_or_404(Review.objects.all(), id=pk)
-        serializer_review = ReviewSerializer(review).data
-        return Response(data=serializer_review,
-                        status=status.HTTP_200_OK)
+    permission_classes = (IsOwner, )
 
 
-"""Search Function"""
+class RecommendedBooks(generics.ListAPIView):
+    serializer_class = BookSimpleSerializer
+    permission_classes = (AllowAny,)
+
+    def get_queryset(self):
+        all_books = Books.objects.all()
+        choice = len(all_books) // 2
+        recommended = sample(list(all_books), choice)
+        return recommended
 
 
-@api_view(['GET'])
-def search(request):
-    search_query = request.GET.get('q', '')  # Ключ должен называться q
-    if search_query:
-        books = Books.objects.filter(Q(title__icontains=search_query))
-        if books:
-            serializer = BookSerializer(books, many=True)
-            return Response(data=serializer.data, status=status.HTTP_200_OK)
-        author = get_object_or_404(Authors, name=search_query)
-        books = Books.objects.filter(author=author.id)
-        serializer = BookSerializer(books, many=True)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-    return Response(data='Not Found', status=status.HTTP_404_NOT_FOUND)
-
-
-class FavoriteViewSet(viewsets.GenericViewSet,
-                      CreateModelMixin,
-                      ListModelMixin):
+class FavoriteListCreateView(generics.ListCreateAPIView):
     serializer_class = FavoriteCreateSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return FavoriteSerializer
+        return FavoriteCreateSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_anonymous:
+            raise Http404
+        return Favorite.objects.filter(user=user)
+
+
+class FavoriteDeleteView(generics.DestroyAPIView):
+    permission_classes = (IsOwner,)
+    serializer_class = FavoriteSerializer
     queryset = Favorite.objects.all()
 
-    def get_permissions(self):
-        if self.action == 'create':
-            permission_classes = [IsAuthenticated]
-        else:
-            permission_classes = [AllowAny]
 
-        return [permission() for permission in permission_classes]
-
-    def list(self, request, *args, **kwargs):
-        queryset = Favorite.objects.filter(user=request.user.id)
-        if queryset:
-            serializer = FavoriteSerializer(queryset, many=True)
-            return Response(data=serializer.data)
-        raise Http404
 
 
 class CharFilterInFilter(filters.BaseInFilter, filters.CharFilter):
@@ -232,6 +218,7 @@ class SimilarGenreView(ListAPIView):
 
 class GenreSuggestView(ListAPIView):
     serializer_class = BookSerializer
+
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
         if query:
@@ -241,6 +228,7 @@ class GenreSuggestView(ListAPIView):
 
 class TitleSuggestView(ListAPIView):
     serializer_class = BookSerializer
+
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
         if query:
@@ -250,9 +238,26 @@ class TitleSuggestView(ListAPIView):
 
 class AuthorSuggestView(ListAPIView):
     serializer_class = BookSerializer
+
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
         if query:
             return Books.objects.filter(author__name__startswith=query)[:5]
         return Books.objects.none()
 
+
+class AddStarRatingView(APIView):
+
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            permission_classes = [IsAuthenticated]
+
+        else:
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
+
+    def post(self, request: Request):
+        serializer = CreateRatingSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=get_client_username(request))
+        return Response(status=status.HTTP_201_CREATED)
