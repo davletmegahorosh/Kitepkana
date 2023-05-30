@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
 from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre, Rating
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
@@ -41,6 +42,18 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = 'id get_user get_book text created_date updated_date user book'.split(' ')
 
 
+class ReviewCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = ('id', 'book',)
+
+    def create(self, validated_data):
+        book = validated_data['book']
+        user = self.context['request'].user
+        review = Review.objects.create(user=user, book=book)
+        return review
+
+
 class BookDetailSerializer(serializers.ModelSerializer):
     genre = GenreSimpleSerializer(many=True)
     reviews = ReviewSerializer(many=True)
@@ -48,7 +61,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Books
-        fields = ('id', 'title', 'cover', 'summary','author_name', 'middle_star', 'pages', 'file',
+        fields = ('id', 'title', 'cover', 'summary', 'author_name', 'middle_star', 'pages', 'file',
                   'author', 'genre', 'reviews')
 
 
@@ -73,11 +86,9 @@ class GenreListSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class AuthorListSerializer(serializers.HyperlinkedModelSerializer):
-    author_books = BookSimpleSerializer(many=True)
-
     class Meta:
         model = Authors
-        fields = ("id", "url", "fullname", "author_books")
+        fields = ("id", "url", "fullname")
 
 
 class GenreDetailSerializer(serializers.ModelSerializer):
@@ -96,6 +107,23 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
         fields = ("id", "fullname", "author_books")
 
 
+@extend_schema_serializer(
+    examples=[
+        OpenApiExample(
+            'Simple example',
+            value=1,
+            request_only=True,
+            response_only=False,
+        ),
+        OpenApiExample(
+            'Single param example',
+            value={"s": 1},
+            request_only=True,
+            response_only=False,
+
+        ),
+    ],
+)
 class CreateRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
@@ -136,13 +164,49 @@ class ReadingBookMarkSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class ReadingBookMarkCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ReadingBookMark
+        fields = ('book',)
+
+    def create(self, validated_data):
+        book = validated_data['book']
+        user = self.context['request'].user
+        reading = ReadingBookMark.objects.create(user=user, book=book)
+        return reading
+
+
 class WillReadBookMarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = WillReadBookMark
         fields = '__all__'
 
 
+class WillReadBookMarkCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WillReadBookMark
+        fields = ('book',)
+
+    def create(self, validated_data):
+        book = validated_data['book']
+        user = self.context['request'].user
+        will = WillReadBookMark.objects.create(user=user, book=book)
+        return will
+
+
 class FinishBookMarkSerializer(serializers.ModelSerializer):
     class Meta:
         model = FinishBookMark
         fields = '__all__'
+
+
+class FinishBookMarkCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FinishBookMark
+        fields = ('book',)
+
+    def create(self, validated_data):
+        book = validated_data['book']
+        user = self.context['request'].user
+        finish = FinishBookMark.objects.create(user=user, book=book)
+        return finish
