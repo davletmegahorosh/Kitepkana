@@ -6,7 +6,9 @@ from .views import GenreFilterAPIView, TitleFilterAPIView, AuthorFilterAPIView, 
     AuthorSuggestView
 from .views import AuthorListView, AuthorDetailView, GenreListView, GenreDetailView
 from .views import BookListView, BookDetailView, RecommendedBooks, AddStarRatingView, ReviewViewSet, \
-    FavoriteListCreateView, FavoriteDeleteView
+    FavoriteListCreateView, FavoriteDeleteView, FinishBookMarkDeleteView, WillReadBookMarkDeleteView,\
+    ReadingBookMarkDeleteView
+
 
 router = routers.SimpleRouter()
 router.register(r'api/v1/reviews', ReviewViewSet)
@@ -27,8 +29,11 @@ urlpatterns = [
 urlpatterns += [
     path('api/v1/titles_filter/', TitleFilterAPIView.as_view(), name='titles_filter'),
     path('api/v1/read_bookmark/', ReadingBookMarkAPIView.as_view(), name='read_bookmark'),
+    path('api/v1/read_bookmark/<int:pk>/', ReadingBookMarkDeleteView.as_view(), name='read_bookmark-detail'),
     path('api/v1/will_read_bookmark/', WillReadBookMarkAPIView.as_view(), name='will_read_bookmark'),
+    path('api/v1/will_read_bookmark/<int:pk>/', WillReadBookMarkDeleteView.as_view(), name='will_read_bookmark-detail'),
     path('api/v1/finish_bookmark/', FinishBookMarkAPIView.as_view(), name='finish_bookmark'),
+    path('api/v1/finish_bookmark/<int:pk>/', FinishBookMarkDeleteView.as_view(), name='finish-detail'),
     path('api/v1/favorite/', FavoriteListCreateView.as_view(), name='favorite'),
     path('api/v1/favorite/<int:pk>/', FavoriteDeleteView.as_view(), name='favorite_detail'),
     path('api/v1/alike_genre/', SimilarGenreView.as_view(), name='alike_genre'),

@@ -1,4 +1,5 @@
 from django.db import models
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
 from users.models import User
@@ -149,6 +150,10 @@ class ReadingBookMark(models.Model):
     def __str__(self):
         return f'{self.user.username} bookmarked {self.book.title}'
 
+    @property
+    def book_title(self):
+        return str(self.book.title)
+
 
 class WillReadBookMark(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -161,7 +166,9 @@ class WillReadBookMark(models.Model):
     def __str__(self):
         return f'{self.user.username} bookmarked {self.book.title}'
 
-
+    @property
+    def book_title(self):
+        return str(self.book.title)
 
 
 class FinishBookMark(models.Model):
@@ -171,6 +178,10 @@ class FinishBookMark(models.Model):
 
     class Meta:
         verbose_name = "Прочитано"
+
+    @property
+    def book_title(self):
+        return str(self.book.title)
 
     def __str__(self):
         return f'{self.user.username} bookmarked {self.book.title}'
