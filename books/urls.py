@@ -28,6 +28,8 @@ urlpatterns = [
 # Filters
 urlpatterns += [
     path('api/v1/titles_filter/', TitleFilterAPIView.as_view(), name='titles_filter'),
+    path('api/v1/authors_filter/', AuthorFilterAPIView.as_view(), name='authors_filter'),
+    path('api/v1/genres_filter/', GenreFilterAPIView.as_view(), name='genres_filter'),
     path('api/v1/read_bookmark/', ReadingBookMarkAPIView.as_view(), name='read_bookmark'),
     path('api/v1/read_bookmark/<int:pk>/', ReadingBookMarkDeleteView.as_view(), name='read_bookmark-detail'),
     path('api/v1/will_read_bookmark/', WillReadBookMarkAPIView.as_view(), name='will_read_bookmark'),

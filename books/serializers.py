@@ -24,11 +24,11 @@ class SimilarGenreSerializer(serializers.ModelSerializer):
 
 
 class GenresSerializer(serializers.ModelSerializer):
-    genres = SimilarGenreSerializer(many=True)
+    similar_genres = SimilarGenreSerializer(many=True)
 
     class Meta:
         model = Genres
-        fields = ('genre_name', 'genres')
+        fields = ('genre_name', 'similar_genres')
 
 
 class GenreSimpleSerializer(serializers.ModelSerializer):
