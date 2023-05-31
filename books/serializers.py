@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
 from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre, Rating
@@ -141,9 +142,17 @@ class CreateRatingSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
+    book_cover = serializers.SerializerMethodField()
+
     class Meta:
         model = Favorite
-        fields = 'book user book_title'.split(' ')
+        fields = 'id book_title book_cover book user'.split(' ')
+
+    def get_book_cover(self, favorite):
+        obj = get_object_or_404(Books, pk=favorite.book.id)
+        serializer = BookSerializer(obj, many=False).data
+        book_cover = serializer['cover']
+        return book_cover
 
 
 class FavoriteCreateSerializer(serializers.ModelSerializer):
@@ -159,9 +168,17 @@ class FavoriteCreateSerializer(serializers.ModelSerializer):
 
 
 class ReadingBookMarkSerializer(serializers.ModelSerializer):
+    book_cover = serializers.SerializerMethodField()
+
     class Meta:
         model = ReadingBookMark
-        fields = '__all__'
+        fields = ("id", "book_title", "book_cover", "book", "user")
+
+    def get_book_cover(self, readingbookmark):
+        obj = get_object_or_404(Books, pk=readingbookmark.book.id)
+        serializer = BookSerializer(obj, many=False).data
+        book_cover = serializer['cover']
+        return book_cover
 
 
 class ReadingBookMarkCreateSerializer(serializers.ModelSerializer):
@@ -177,9 +194,17 @@ class ReadingBookMarkCreateSerializer(serializers.ModelSerializer):
 
 
 class WillReadBookMarkSerializer(serializers.ModelSerializer):
+    book_cover = serializers.SerializerMethodField()
+
     class Meta:
         model = WillReadBookMark
-        fields = '__all__'
+        fields = ("id", "book_title", "book_cover", "book", "user")
+
+    def get_book_cover(self, willreadbookmark):
+        obj = get_object_or_404(Books, pk=willreadbookmark.book.id)
+        serializer = BookSerializer(obj, many=False).data
+        book_cover = serializer['cover']
+        return book_cover
 
 
 class WillReadBookMarkCreateSerializer(serializers.ModelSerializer):
@@ -195,9 +220,17 @@ class WillReadBookMarkCreateSerializer(serializers.ModelSerializer):
 
 
 class FinishBookMarkSerializer(serializers.ModelSerializer):
+    book_cover = serializers.SerializerMethodField()
+
     class Meta:
         model = FinishBookMark
-        fields = '__all__'
+        fields = ("id", "book_title", "book_cover", "book", "user")
+
+    def get_book_cover(self, finishbookmark):
+        obj = get_object_or_404(Books, pk=finishbookmark.book.id)
+        serializer = BookSerializer(obj, many=False).data
+        book_cover = serializer['cover']
+        return book_cover
 
 
 class FinishBookMarkCreateSerializer(serializers.ModelSerializer):

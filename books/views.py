@@ -224,7 +224,7 @@ class FavoriteListCreateView(generics.ListCreateAPIView):
 @extend_schema_view(
     delete=extend_schema(
         summary='Метод удаления книги из избранных',
-        description='Если вы хотите удалить, то вам нужно указать идентификатор книги'
+        description='Если вы хотите удалить, то вам нужно указать идентификатор  - id'
 
     ))
 class FavoriteDeleteView(generics.DestroyAPIView):
@@ -295,9 +295,9 @@ class AuthorFilterAPIView(ListAPIView):
     post=extend_schema(
         summary='Метод для добавления книг в закладку "Читаю"',
         description='Требуется указать только идентификатор книги'
-    )
+    ),
 )
-class ReadingBookMarkAPIView(ListCreateAPIView):
+class ReadingBookMarkAPIView(ListCreateAPIView,):
     queryset = ReadingBookMark.objects.all()
     serializer_class = ReadingBookMarkSerializer
     permission_classes = (IsAuthenticated,)
@@ -312,6 +312,16 @@ class ReadingBookMarkAPIView(ListCreateAPIView):
         if user.is_anonymous:
             raise Http404
         return ReadingBookMark.objects.filter(user=user)
+@extend_schema_view(
+    delete=extend_schema(
+        summary='Метод удаления книги из закладки "Читаю',
+        description='Если вы хотите удалить, то вам нужно указать идентификатор  - id'
+
+    ))
+class ReadingBookMarkDeleteView(generics.DestroyAPIView):
+    permission_classes = (IsOwner,)
+    serializer_class = ReadingBookMarkSerializer
+    queryset = ReadingBookMark.objects.all()
 
 
 @extend_schema_view(
@@ -323,7 +333,7 @@ class ReadingBookMarkAPIView(ListCreateAPIView):
         description='Требуется указать только идентификатор книги'
     )
 )
-class WillReadBookMarkAPIView(ListCreateAPIView):
+class WillReadBookMarkAPIView(generics.ListCreateAPIView):
     queryset = WillReadBookMark.objects.all()
     serializer_class = WillReadBookMarkSerializer
     permission_classes = (IsAuthenticated,)
@@ -341,12 +351,27 @@ class WillReadBookMarkAPIView(ListCreateAPIView):
 
 
 @extend_schema_view(
+    delete=extend_schema(
+        summary='Метод удаления книги из закладки "Буду читать',
+        description='Если вы хотите удалить, то вам нужно указать идентификатор  - id'
+
+    ))
+class WillReadBookMarkDeleteView(generics.DestroyAPIView):
+    permission_classes = (IsOwner,)
+    serializer_class = WillReadBookMarkSerializer
+    queryset = WillReadBookMark.objects.all()
+
+
+@extend_schema_view(
     get=extend_schema(
         summary='Метод для получения списка книг из закладки "Прочитано"',
     ),
     post=extend_schema(
         summary='Метод для добавления книг в закладку "Прочитано"',
         description='Требуется указать только идентификатор книги'
+    ),
+    delete=extend_schema(
+        summary='Метод для удаления книги из закладки \"Прочитано\". Для удаления'
     )
 )
 class FinishBookMarkAPIView(ListCreateAPIView):
@@ -364,6 +389,19 @@ class FinishBookMarkAPIView(ListCreateAPIView):
         if user.is_anonymous:
             raise Http404
         return FinishBookMark.objects.filter(user=user)
+
+
+@extend_schema_view(
+    delete=extend_schema(
+        summary='Метод удаления книги из закладки "Прочитано',
+        description='Если вы хотите удалить, то вам нужно указать идентификатор  - id'
+
+    ))
+class FinishBookMarkDeleteView(generics.DestroyAPIView):
+    permission_classes = (IsOwner,)
+    serializer_class = FinishBookMarkSerializer
+    queryset = FinishBookMark.objects.all()
+
 
 
 @extend_schema_view(
