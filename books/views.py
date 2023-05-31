@@ -274,7 +274,7 @@ class TitleFilterAPIView(ListAPIView):
 
 
 class AuthorFilter(filters.FilterSet):
-    authors = CharFilterInFilter(field_name='author__name', lookup_expr='in')
+    authors = CharFilterInFilter(field_name='author__fullname', lookup_expr='in')
 
     class Meta:
         model = Books
