@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
+from .models import RatingStar
 from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre, Rating
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 
@@ -131,14 +132,29 @@ class CreateRatingSerializer(serializers.ModelSerializer):
         fields = ('star', 'book')
 
     def create(self, validated_data):
-        rating = Rating.objects.update_or_create(
-            user=validated_data.get('user', None),
-            book=validated_data.get('book', None),
-            defaults={'star': validated_data.get('star')}
+        user = validated_data.get('user', None)
+        book = validated_data.get('book', None)
+        bew = validated_data.get('star')
+        star = RatingStar.objects.get(value=bew.id)
+        # print(star.id)
 
-        )
+        found = Rating.objects.filter(user=user, book=book)
+        if found:
+            rating_obj = found[0]
+            rating_obj.user = user
+            rating_obj.book = book
+            rating_obj.star = star
+            rating_obj.save()
+            return rating_obj
 
-        return rating
+        else:
+            rating = Rating.objects.create(
+                user=validated_data.get('user', None),
+                book=validated_data.get('book', None),
+                star=star
+
+            )
+            return rating
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
