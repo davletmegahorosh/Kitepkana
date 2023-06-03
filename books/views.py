@@ -495,29 +495,7 @@ class AuthorSuggestView(ListAPIView):
                     '\nМаксимальное значение: 5\n'
                     '\n В качестве значения ключа \"book\" пишется идентификатор книги [id]\n',
         responses=status.HTTP_201_CREATED,
-        request={
-            "application/json": {
-                "type": "object",
-                "properties": {
-                    "star": {"type": "int"},
-                    "book": {"type": "int"}, },
-            },
-        }
-
-        ,
-        parameters=[
-            OpenApiParameter(
-                name='some_new_parameter',
-                location=OpenApiParameter.HEADER,
-                description='some new parameter for update post',
-                required=False,
-                type=dict
-
-            ),
-        ]
-    )
-
-)
+    ))
 class AddStarRatingView(APIView):
 
     def get_permissions(self):
@@ -530,6 +508,6 @@ class AddStarRatingView(APIView):
 
     def post(self, request: Request):
         serializer = CreateRatingSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=get_client_username(request))
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=get_client_username(request))
         return Response(status=status.HTTP_201_CREATED)
