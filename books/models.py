@@ -104,7 +104,7 @@ class Rating(models.Model):
 
 class Review(models.Model):
     book = models.ForeignKey(Books, on_delete=models.CASCADE, null=True, blank=True, related_name='reviews')
-    text = models.TextField(null=True, blank=True, help_text='Оставь комментарии')
+    text = models.TextField(help_text='Оставь комментарии')
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     user = models.ForeignKey(User, verbose_name="Пользователь", on_delete=models.CASCADE)

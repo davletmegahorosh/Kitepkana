@@ -33,8 +33,7 @@ paths:
                 book:
                   type: int
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -51,8 +50,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -72,15 +70,14 @@ paths:
       summary: Фильтрация по похожим жанрам
       parameters:
       - in: query
-        name: Фильтрация по похожим жанрам
+        name: Фильтрация по жанрам
         schema:
           type: object
           additionalProperties: {}
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -112,8 +109,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -135,8 +131,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -150,6 +145,7 @@ paths:
   /api/v1/authors/{id}/:
     get:
       operationId: api_v1_authors_retrieve
+      description: Требуется указать идентификатор автора
       summary: Метод для получения детальной информации об авторе
       parameters:
       - in: path
@@ -160,8 +156,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -189,8 +184,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -208,8 +202,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -234,8 +227,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -250,8 +242,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -280,8 +271,7 @@ paths:
               $ref: '#/components/schemas/FavoriteCreate'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -292,7 +282,7 @@ paths:
   /api/v1/favorite/{id}/:
     delete:
       operationId: api_v1_favorite_destroy
-      description: Если вы хотите удалить, то вам нужно указать идентификатор книги
+      description: Если вы хотите удалить, то вам нужно указать идентификатор  - id
       summary: Метод удаления книги из избранных
       parameters:
       - in: path
@@ -303,8 +293,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
@@ -315,9 +304,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -346,9 +333,7 @@ paths:
               $ref: '#/components/schemas/FinishBookMarkCreate'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -356,14 +341,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/FinishBookMarkCreate'
           description: ''
-  /api/v1/genre_suggest/:
-    get:
-      operationId: api_v1_genre_suggest_list
+  /api/v1/finish_bookmark/{id}/:
+    delete:
+      operationId: api_v1_finish_bookmark_destroy
+      description: Если вы хотите удалить, то вам нужно указать идентификатор  - id
+      summary: Метод удаления книги из закладки "Прочитано
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/genre_suggest/:
+    get:
+      operationId: api_v1_genre_suggest_list
+      description: |-
+        Необходимо передать параметр в запрос: query=value
+
+         Пример: http://localhost:8000/?query=Роман
+      summary: Фильтрация книг по жанрам
+      tags:
+      - api
+      security:
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -381,8 +388,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -406,8 +412,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -485,8 +490,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -590,9 +594,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -620,9 +622,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ReadingBookMarkCreate'
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -630,6 +630,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/ReadingBookMarkCreate'
           description: ''
+  /api/v1/read_bookmark/{id}/:
+    delete:
+      operationId: api_v1_read_bookmark_destroy
+      description: Если вы хотите удалить, то вам нужно указать идентификатор  - id
+      summary: Метод удаления книги из закладки "Читаю
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /api/v1/recommended_books/:
     get:
       operationId: api_v1_recommended_books_list
@@ -637,8 +655,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -656,8 +673,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -665,7 +681,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ReviewCreate'
+                  $ref: '#/components/schemas/ReviewList'
           description: ''
     post:
       operationId: api_v1_reviews_create
@@ -684,9 +700,9 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/ReviewCreate'
+        required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -709,14 +725,13 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReviewCreate'
+                $ref: '#/components/schemas/Review'
           description: ''
     put:
       operationId: api_v1_reviews_update
@@ -742,9 +757,9 @@ paths:
           multipart/form-data:
             schema:
               $ref: '#/components/schemas/ReviewCreate'
+        required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -769,22 +784,21 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/PatchedReviewCreate'
+              $ref: '#/components/schemas/PatchedReview'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/PatchedReviewCreate'
+              $ref: '#/components/schemas/PatchedReview'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/PatchedReviewCreate'
+              $ref: '#/components/schemas/PatchedReview'
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReviewCreate'
+                $ref: '#/components/schemas/Review'
           description: ''
     delete:
       operationId: api_v1_reviews_destroy
@@ -800,14 +814,18 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
   /api/v1/titles_filter/:
     get:
       operationId: api_v1_titles_filter_list
+      description: |-
+        Необходимо передать параметр в запрос: query=value
+
+         Пример: http://localhost:8000/?title=И дольше века длится день
+      summary: Фильтр по названию книг
       parameters:
       - in: query
         name: title
@@ -825,8 +843,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -844,9 +861,7 @@ paths:
       tags:
       - api
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -875,9 +890,7 @@ paths:
               $ref: '#/components/schemas/WillReadBookMarkCreate'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
+      - jwtAuth: []
       responses:
         '201':
           content:
@@ -885,6 +898,24 @@ paths:
               schema:
                 $ref: '#/components/schemas/WillReadBookMarkCreate'
           description: ''
+  /api/v1/will_read_bookmark/{id}/:
+    delete:
+      operationId: api_v1_will_read_bookmark_destroy
+      description: Если вы хотите удалить, то вам нужно указать идентификатор  - id
+      summary: Метод удаления книги из закладки "Буду читать
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
   /auth/jwt/create/:
     post:
       operationId: auth_jwt_create_create
@@ -972,8 +1003,7 @@ paths:
       tags:
       - auth
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1000,8 +1030,7 @@ paths:
               $ref: '#/components/schemas/UserCreatePasswordRetype'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '201':
@@ -1023,8 +1052,7 @@ paths:
       tags:
       - auth
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1056,8 +1084,7 @@ paths:
               $ref: '#/components/schemas/User'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1088,8 +1115,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedUser'
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1109,8 +1135,7 @@ paths:
       tags:
       - auth
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
@@ -1132,8 +1157,7 @@ paths:
               $ref: '#/components/schemas/Activation'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -1148,8 +1172,7 @@ paths:
       tags:
       - auth
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1174,8 +1197,7 @@ paths:
               $ref: '#/components/schemas/User'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1199,8 +1221,7 @@ paths:
             schema:
               $ref: '#/components/schemas/PatchedUser'
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1213,8 +1234,7 @@ paths:
       tags:
       - auth
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '204':
           description: No response body
@@ -1236,8 +1256,7 @@ paths:
               $ref: '#/components/schemas/SendEmailReset'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -1264,8 +1283,7 @@ paths:
               $ref: '#/components/schemas/SendEmailReset'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -1292,8 +1310,7 @@ paths:
               $ref: '#/components/schemas/UsernameResetConfirm'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -1320,8 +1337,7 @@ paths:
               $ref: '#/components/schemas/SendEmailReset'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -1348,8 +1364,7 @@ paths:
               $ref: '#/components/schemas/PasswordResetConfirm'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       - {}
       responses:
         '200':
@@ -1376,8 +1391,7 @@ paths:
               $ref: '#/components/schemas/SetUsername'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1403,8 +1417,7 @@ paths:
               $ref: '#/components/schemas/SetPasswordRetype'
         required: true
       security:
-      - cookieAuth: []
-      - basicAuth: []
+      - jwtAuth: []
       responses:
         '200':
           content:
@@ -1555,7 +1568,7 @@ components:
         reviews:
           type: array
           items:
-            $ref: '#/components/schemas/Review'
+            $ref: '#/components/schemas/ReviewList'
       required:
       - author_name
       - genre
@@ -1613,17 +1626,19 @@ components:
     Favorite:
       type: object
       properties:
-        book:
+        id:
           type: integer
-        user:
-          type: integer
+          readOnly: true
         book_title:
           type: string
           readOnly: true
+        book_cover:
+          type: string
+          readOnly: true
       required:
-      - book
+      - book_cover
       - book_title
-      - user
+      - id
     FavoriteCreate:
       type: object
       properties:
@@ -1637,20 +1652,16 @@ components:
         id:
           type: integer
           readOnly: true
-        bookmarked_date:
+        book_title:
           type: string
-          format: date-time
           readOnly: true
-          nullable: true
-        user:
-          type: integer
-        book:
-          type: integer
+        book_cover:
+          type: string
+          readOnly: true
       required:
-      - book
-      - bookmarked_date
+      - book_cover
+      - book_title
       - id
-      - user
     FinishBookMarkCreate:
       type: object
       properties:
@@ -1937,13 +1948,13 @@ components:
             * `Сатира` - САТИРА
             * `Постмодернизм` - ПОСТМОДЕРНИЗМ
             * `Повседневность` - ПОВСЕДНЕВНОСТЬ
-        genres:
+        similar_genres:
           type: array
           items:
             $ref: '#/components/schemas/SimilarGenre'
       required:
       - genre_name
-      - genres
+      - similar_genres
     PasswordResetConfirm:
       type: object
       properties:
@@ -1980,12 +1991,32 @@ components:
           type: string
           nullable: true
           maxLength: 15
-    PatchedReviewCreate:
+    PatchedReview:
       type: object
       properties:
         id:
           type: integer
           readOnly: true
+        get_user:
+          type: string
+          readOnly: true
+        get_book:
+          type: string
+          readOnly: true
+        text:
+          type: string
+          description: Оставь комментарии
+        created_date:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_date:
+          type: string
+          format: date-time
+          readOnly: true
+        user:
+          type: integer
+          title: Пользователь
         book:
           type: integer
           nullable: true
@@ -2034,19 +2065,15 @@ components:
         id:
           type: integer
           readOnly: true
-        bookmarked_date:
+        book_title:
           type: string
-          format: date-time
           readOnly: true
-          nullable: true
-        user:
-          type: integer
-          nullable: true
-        book:
-          type: integer
-          nullable: true
+        book_cover:
+          type: string
+          readOnly: true
       required:
-      - bookmarked_date
+      - book_cover
+      - book_title
       - id
     ReadingBookMarkCreate:
       type: object
@@ -2068,7 +2095,6 @@ components:
           readOnly: true
         text:
           type: string
-          nullable: true
           description: Оставь комментарии
         created_date:
           type: string
@@ -2089,6 +2115,7 @@ components:
       - get_book
       - get_user
       - id
+      - text
       - updated_date
       - user
     ReviewCreate:
@@ -2100,8 +2127,42 @@ components:
         book:
           type: integer
           nullable: true
+        text:
+          type: string
+          description: Оставь комментарии
       required:
       - id
+      - text
+    ReviewList:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        get_user:
+          type: string
+          readOnly: true
+        get_book:
+          type: string
+          readOnly: true
+        text:
+          type: string
+          description: Оставь комментарии
+        created_date:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_date:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_date
+      - get_book
+      - get_user
+      - id
+      - text
+      - updated_date
     SendEmailReset:
       type: object
       properties:
@@ -2252,20 +2313,16 @@ components:
         id:
           type: integer
           readOnly: true
-        bookmarked_date:
+        book_title:
           type: string
-          format: date-time
           readOnly: true
-          nullable: true
-        user:
-          type: integer
-        book:
-          type: integer
+        book_cover:
+          type: string
+          readOnly: true
       required:
-      - book
-      - bookmarked_date
+      - book_cover
+      - book_title
       - id
-      - user
     WillReadBookMarkCreate:
       type: object
       properties:
@@ -2277,7 +2334,8 @@ components:
     basicAuth:
       type: http
       scheme: basic
-    cookieAuth:
+    jwtAuth:
       type: apiKey
-      in: cookie
-      name: sessionid
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "JWT"

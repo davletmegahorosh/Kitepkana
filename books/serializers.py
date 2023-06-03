@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 from .models import RatingStar
 from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre, Rating
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
@@ -44,21 +45,40 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = 'id get_user get_book text created_date updated_date user book'.split(' ')
 
 
+class ReviewListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Review
+        fields = 'id get_user get_book text created_date updated_date'.split(' ')
+
+
 class ReviewCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ('id', 'book',)
+        fields = ('id', 'book', 'text')
 
     def create(self, validated_data):
-        book = validated_data['book']
         user = self.context['request'].user
-        review = Review.objects.create(user=user, book=book)
+        try:
+            book = validated_data['book']
+        except KeyError:
+            raise ValidationError({"book":["This field is required."]})
+        try:
+            text = validated_data['text']
+        except KeyError:
+            raise ValidationError({"text":["This field is required."]})
+
+        review = Review.objects.create(user=user, book=book, text=text)
         return review
+
+    def update(self, instance, validated_data):
+        instance.text = validated_data.get('text', instance.text)
+        instance.save()
+        return instance
 
 
 class BookDetailSerializer(serializers.ModelSerializer):
     genre = GenreSimpleSerializer(many=True)
-    reviews = ReviewSerializer(many=True)
+    reviews = ReviewListSerializer(many=True)
     middle_star = serializers.IntegerField()
 
     class Meta:
@@ -162,7 +182,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Favorite
-        fields = 'id book_title book_cover book user'.split(' ')
+        fields = 'id book_title book_cover'.split(' ')
 
     def get_book_cover(self, favorite):
         obj = get_object_or_404(Books, pk=favorite.book.id)
@@ -177,8 +197,14 @@ class FavoriteCreateSerializer(serializers.ModelSerializer):
         fields = ('book',)
 
     def create(self, validated_data):
-        book = validated_data['book']
         user = self.context['request'].user
+        try:
+            book = validated_data['book']
+        except KeyError:
+            raise ValidationError({"book":["This field is required."]})
+        exist_obj = Favorite.objects.filter(user=user, book=book)
+        if exist_obj:
+            raise ValidationError("Данная книга уже имеется во вкладке 'Избранное'")
         favorite = Favorite.objects.create(user=user, book=book)
         return favorite
 
@@ -188,7 +214,7 @@ class ReadingBookMarkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReadingBookMark
-        fields = ("id", "book_title", "book_cover", "book", "user")
+        fields = ("id", "book_title", "book_cover")
 
     def get_book_cover(self, readingbookmark):
         obj = get_object_or_404(Books, pk=readingbookmark.book.id)
@@ -203,8 +229,14 @@ class ReadingBookMarkCreateSerializer(serializers.ModelSerializer):
         fields = ('book',)
 
     def create(self, validated_data):
-        book = validated_data['book']
         user = self.context['request'].user
+        try:
+            book = validated_data['book']
+        except KeyError:
+            raise ValidationError({"book": ["This field is required."]})
+        exist_obj = ReadingBookMark.objects.filter(user=user, book=book)
+        if exist_obj:
+            raise ValidationError("Данная книга уже имеется во вкладке 'Читаю' ")
         reading = ReadingBookMark.objects.create(user=user, book=book)
         return reading
 
@@ -214,7 +246,7 @@ class WillReadBookMarkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WillReadBookMark
-        fields = ("id", "book_title", "book_cover", "book", "user")
+        fields = ("id", "book_title", "book_cover")
 
     def get_book_cover(self, willreadbookmark):
         obj = get_object_or_404(Books, pk=willreadbookmark.book.id)
@@ -229,8 +261,14 @@ class WillReadBookMarkCreateSerializer(serializers.ModelSerializer):
         fields = ('book',)
 
     def create(self, validated_data):
-        book = validated_data['book']
         user = self.context['request'].user
+        try:
+            book = validated_data['book']
+        except KeyError:
+            raise ValidationError({"book": ["This field is required."]})
+        exist_obj = WillReadBookMark.objects.filter(user=user, book=book)
+        if exist_obj:
+            raise ValidationError("Данная книга уже имеется во вкладке 'Буду читать' ")
         will = WillReadBookMark.objects.create(user=user, book=book)
         return will
 
@@ -240,7 +278,7 @@ class FinishBookMarkSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FinishBookMark
-        fields = ("id", "book_title", "book_cover", "book", "user")
+        fields = ("id", "book_title", "book_cover",)
 
     def get_book_cover(self, finishbookmark):
         obj = get_object_or_404(Books, pk=finishbookmark.book.id)
@@ -255,7 +293,13 @@ class FinishBookMarkCreateSerializer(serializers.ModelSerializer):
         fields = ('book',)
 
     def create(self, validated_data):
-        book = validated_data['book']
         user = self.context['request'].user
+        try:
+            book = validated_data['book']
+        except KeyError:
+            raise ValidationError({"book": ["This field is required."]})
+        exist_obj = FinishBookMark.objects.filter(user=user, book=book)
+        if exist_obj:
+            raise ValidationError("Данная книга уже имеется во вкладке 'Прочитано' ")
         finish = FinishBookMark.objects.create(user=user, book=book)
         return finish

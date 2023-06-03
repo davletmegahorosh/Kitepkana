@@ -23,6 +23,7 @@ from .serializers import AuthorListSerializer, AuthorDetailSerializer, GenreList
 from .serializers import GenreListSerializer, GenreDetailSerializer, BookListSerializer
 from .serializers import BookDetailSerializer, BookSimpleSerializer, FinishBookMarkCreateSerializer
 from .serializers import WillReadBookMarkCreateSerializer, ReadingBookMarkCreateSerializer, ReviewCreateSerializer
+from .serializers import ReviewListSerializer
 from django.db import models
 
 
@@ -163,8 +164,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
 
     def get_serializer_class(self):
-        if self.action == 'create' or 'destroy':
+        if self.action == 'create' or self.action == 'destroy' or self.action == 'update':
             return ReviewCreateSerializer
+        if self.action == 'list':
+            return ReviewListSerializer
         return ReviewSerializer
 
     def get_permissions(self):
@@ -401,7 +404,6 @@ class FinishBookMarkDeleteView(generics.DestroyAPIView):
     permission_classes = (IsOwner,)
     serializer_class = FinishBookMarkSerializer
     queryset = FinishBookMark.objects.all()
-
 
 
 @extend_schema_view(
