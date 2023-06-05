@@ -172,9 +172,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
 
-        if self.action == 'create':
+        if self.action == 'create' or self.action == 'list':
             permission_classes = [IsAuthenticated]
-        elif self.action == 'destroy' or 'update' or 'partial_update':
+        elif self.action == 'destroy' or self.action == 'update' or self.action == 'partial_update':
             permission_classes = [IsOwner]
         elif self.action == 'retrieve':
             permission_classes = [IsOwner or IsAdminUser]
