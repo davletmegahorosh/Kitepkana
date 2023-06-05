@@ -23,6 +23,7 @@ from .serializers import AuthorListSerializer, AuthorDetailSerializer, GenreList
 from .serializers import GenreListSerializer, GenreDetailSerializer, BookListSerializer
 from .serializers import BookDetailSerializer, BookSimpleSerializer, FinishBookMarkCreateSerializer
 from .serializers import WillReadBookMarkCreateSerializer, ReadingBookMarkCreateSerializer, ReviewCreateSerializer
+from .serializers import ReviewListSerializer
 from django.db import models
 
 
@@ -163,15 +164,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
 
     def get_serializer_class(self):
-        if self.action == 'create' or 'destroy':
+        if self.action == 'create' or self.action == 'destroy' or self.action == 'update':
             return ReviewCreateSerializer
+        if self.action == 'list':
+            return ReviewListSerializer
         return ReviewSerializer
 
     def get_permissions(self):
 
-        if self.action == 'create':
+        if self.action == 'create' or self.action == 'list':
             permission_classes = [IsAuthenticated]
-        elif self.action == 'destroy' or 'update' or 'partial_update':
+        elif self.action == 'destroy' or self.action == 'update' or self.action == 'partial_update':
             permission_classes = [IsOwner]
         elif self.action == 'retrieve':
             permission_classes = [IsOwner or IsAdminUser]
@@ -403,7 +406,6 @@ class FinishBookMarkDeleteView(generics.DestroyAPIView):
     queryset = FinishBookMark.objects.all()
 
 
-
 @extend_schema_view(
     get=extend_schema(
         summary='Фильтрация по похожим жанрам',
@@ -493,29 +495,7 @@ class AuthorSuggestView(ListAPIView):
                     '\nМаксимальное значение: 5\n'
                     '\n В качестве значения ключа \"book\" пишется идентификатор книги [id]\n',
         responses=status.HTTP_201_CREATED,
-        request={
-            "application/json": {
-                "type": "object",
-                "properties": {
-                    "star": {"type": "int"},
-                    "book": {"type": "int"}, },
-            },
-        }
-
-        ,
-        parameters=[
-            OpenApiParameter(
-                name='some_new_parameter',
-                location=OpenApiParameter.HEADER,
-                description='some new parameter for update post',
-                required=False,
-                type=dict
-
-            ),
-        ]
-    )
-
-)
+    ))
 class AddStarRatingView(APIView):
 
     def get_permissions(self):
@@ -528,6 +508,6 @@ class AddStarRatingView(APIView):
 
     def post(self, request: Request):
         serializer = CreateRatingSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=get_client_username(request))
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=get_client_username(request))
         return Response(status=status.HTTP_201_CREATED)
