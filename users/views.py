@@ -23,7 +23,7 @@ class ProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
     Вьюшка для того чтобы пользователь мог получать свои данные, а также
     изменять их
     """
-    authentication_classes = [BasicAuthentication]
+    # authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     def get_object(self):
@@ -43,7 +43,7 @@ class ProfileDeleteView(APIView):
     Вьюшка для удаления профиля пользователя
     """
 
-    authentication_classes = [BasicAuthentication]
+    # authentication_classes = [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     def delete(self, request):
