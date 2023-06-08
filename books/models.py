@@ -1,7 +1,5 @@
 from django.db import models
-from django.shortcuts import get_object_or_404
 from django.urls import reverse
-
 from users.models import User
 from .genres_list import GENRE_CHOICES
 
@@ -37,18 +35,6 @@ class Genres(models.Model):
         return reverse('genres_detail', kwargs={"pk": self.pk})
 
 
-class SimilarGenre(models.Model):
-    simil_name = models.CharField(max_length=100, null=True)
-    genre = models.ForeignKey(Genres, on_delete=models.CASCADE, null=True, related_name='similar_genres')
-
-    class Meta:
-        verbose_name = "Похожий жанр"
-        verbose_name_plural = "Похожие жанры"
-
-    def __str__(self):
-        return self.simil_name
-
-
 class Books(models.Model):
     cover = models.ImageField(upload_to='', null=True, blank=True)
     title = models.CharField(max_length=100)
@@ -72,7 +58,6 @@ class Books(models.Model):
     @property
     def author_name(self):
         return str(self.author)
-
 
 
 class RatingStar(models.Model):
@@ -185,11 +170,3 @@ class FinishBookMark(models.Model):
 
     def __str__(self):
         return f'{self.user.username} bookmarked {self.book.title}'
-
-
-
-
-
-
-
-

@@ -8,10 +8,10 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre
+from .models import Books, Genres, Authors, Review, Favorite
 from .permissions_book import IsOwner
 from .serializers import BookSerializer, GenresSerializer, ReviewSerializer, FavoriteCreateSerializer, \
-    FavoriteSerializer, SimilarGenreSerializer, CreateRatingSerializer
+    FavoriteSerializer, CreateRatingSerializer
 from rest_framework import viewsets
 from random import sample
 from django_filters import rest_framework as filters
@@ -19,7 +19,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 from .serializers import ReadingBookMarkSerializer, WillReadBookMarkSerializer, FinishBookMarkSerializer
 from .service import get_client_username
-from .serializers import AuthorListSerializer, AuthorDetailSerializer, GenreListSerializer
+from .serializers import AuthorListSerializer, AuthorDetailSerializer
 from .serializers import GenreListSerializer, GenreDetailSerializer, BookListSerializer
 from .serializers import BookDetailSerializer, BookSimpleSerializer, FinishBookMarkCreateSerializer
 from .serializers import WillReadBookMarkCreateSerializer, ReadingBookMarkCreateSerializer, ReviewCreateSerializer
@@ -300,7 +300,7 @@ class AuthorFilterAPIView(ListAPIView):
         description='Требуется указать только идентификатор книги'
     ),
 )
-class ReadingBookMarkAPIView(ListCreateAPIView,):
+class ReadingBookMarkAPIView(ListCreateAPIView, ):
     queryset = ReadingBookMark.objects.all()
     serializer_class = ReadingBookMarkSerializer
     permission_classes = (IsAuthenticated,)
@@ -315,6 +315,8 @@ class ReadingBookMarkAPIView(ListCreateAPIView,):
         if user.is_anonymous:
             raise Http404
         return ReadingBookMark.objects.filter(user=user)
+
+
 @extend_schema_view(
     delete=extend_schema(
         summary='Метод удаления книги из закладки "Читаю',
@@ -427,11 +429,6 @@ class FinishBookMarkDeleteView(generics.DestroyAPIView):
         ]
     )
 )
-class SimilarGenreView(ListAPIView):
-    queryset = SimilarGenre.objects.all()
-    serializer_class = SimilarGenreSerializer
-
-
 @extend_schema_view(
     get=extend_schema(
         summary='Фильтрация книг по жанрам',

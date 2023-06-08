@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework.routers import SimpleRouter
 from .views import GenreFilterAPIView, TitleFilterAPIView, AuthorFilterAPIView, ReadingBookMarkAPIView, \
-    WillReadBookMarkAPIView, FinishBookMarkAPIView, SimilarGenreView, GenreSuggestView, TitleSuggestView, \
+    WillReadBookMarkAPIView, FinishBookMarkAPIView, GenreSuggestView, TitleSuggestView, \
     AuthorSuggestView
 from .views import AuthorListView, AuthorDetailView, GenreListView, GenreDetailView
 from .views import BookListView, BookDetailView, RecommendedBooks, AddStarRatingView, ReviewViewSet, \
@@ -38,7 +38,7 @@ urlpatterns += [
     path('api/v1/finish_bookmark/<int:pk>/', FinishBookMarkDeleteView.as_view(), name='finish-detail'),
     path('api/v1/favorite/', FavoriteListCreateView.as_view(), name='favorite'),
     path('api/v1/favorite/<int:pk>/', FavoriteDeleteView.as_view(), name='favorite_detail'),
-    path('api/v1/alike_genre/', SimilarGenreView.as_view(), name='alike_genre'),
+    path('api/v1/title_suggest/', TitleSuggestView.as_view(), name='title_suggest'),
     path('api/v1/genre_suggest/', GenreSuggestView.as_view(), name='genre_suggest'),
     path('api/v1/author_suggest/', AuthorSuggestView.as_view(), name='author_suggest')
 
