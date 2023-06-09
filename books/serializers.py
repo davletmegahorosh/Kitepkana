@@ -94,6 +94,12 @@ class BookSimpleSerializer(BookListSerializer):
         fields = ("id", "title", "cover", "url")
 
 
+class SuggestSerializer(BookSimpleSerializer):
+    class Meta:
+        model = Books
+        fields = ("id", "title", "cover", "author_name", "url")
+
+
 class GenreListSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Genres
