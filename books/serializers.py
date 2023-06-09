@@ -3,7 +3,7 @@ from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from .models import RatingStar
-from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre, Rating
+from .models import Books, Genres, Authors, Review, Favorite, Rating
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 
 
@@ -19,18 +19,11 @@ class AuthorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class SimilarGenreSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SimilarGenre
-        fields = '__all__'
-
-
 class GenresSerializer(serializers.ModelSerializer):
-    similar_genres = SimilarGenreSerializer(many=True)
 
     class Meta:
         model = Genres
-        fields = ('genre_name', 'similar_genres')
+        fields = ('genre_name',)
 
 
 class GenreSimpleSerializer(serializers.ModelSerializer):
@@ -99,6 +92,12 @@ class BookSimpleSerializer(BookListSerializer):
     class Meta:
         model = Books
         fields = ("id", "title", "cover", "url")
+
+
+class SuggestSerializer(BookSimpleSerializer):
+    class Meta:
+        model = Books
+        fields = ("id", "title", "cover", "author_name", "url")
 
 
 class GenreListSerializer(serializers.HyperlinkedModelSerializer):

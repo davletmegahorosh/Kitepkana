@@ -1,17 +1,15 @@
-from django.db.models import Q
 from django.http import Http404
-from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, generics, mixins
 from rest_framework.generics import get_object_or_404, ListAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Books, Genres, Authors, Review, Favorite, SimilarGenre
+from .models import Books, Genres, Authors, Review, Favorite
 from .permissions_book import IsOwner
-from .serializers import BookSerializer, GenresSerializer, ReviewSerializer, FavoriteCreateSerializer, \
-    FavoriteSerializer, SimilarGenreSerializer, CreateRatingSerializer
+from .serializers import  ReviewSerializer, FavoriteCreateSerializer, \
+    FavoriteSerializer, CreateRatingSerializer
 from rest_framework import viewsets
 from random import sample
 from django_filters import rest_framework as filters
@@ -19,11 +17,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 from .serializers import ReadingBookMarkSerializer, WillReadBookMarkSerializer, FinishBookMarkSerializer
 from .service import get_client_username
-from .serializers import AuthorListSerializer, AuthorDetailSerializer, GenreListSerializer
+from .serializers import AuthorListSerializer, AuthorDetailSerializer
 from .serializers import GenreListSerializer, GenreDetailSerializer, BookListSerializer
-from .serializers import BookDetailSerializer, BookSimpleSerializer, FinishBookMarkCreateSerializer
+from .serializers import BookDetailSerializer,  FinishBookMarkCreateSerializer
 from .serializers import WillReadBookMarkCreateSerializer, ReadingBookMarkCreateSerializer, ReviewCreateSerializer
-from .serializers import ReviewListSerializer
+from .serializers import ReviewListSerializer, SuggestSerializer
 from django.db import models
 
 
@@ -188,7 +186,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         summary='Метод для получения рекомендованных книг'
     ))
 class RecommendedBooks(generics.ListAPIView):
-    serializer_class = BookSimpleSerializer
+    serializer_class = SuggestSerializer
     permission_classes = (AllowAny,)
     queryset = Books.objects.all()
 
@@ -240,19 +238,19 @@ class CharFilterInFilter(filters.BaseInFilter, filters.CharFilter):
     pass
 
 
-class GenreFilter(filters.FilterSet):
-    genres = CharFilterInFilter(field_name='genre_name', lookup_expr='in')
-
-    class Meta:
-        model = Genres
-        fields = ['genre_name']
-
-
-class GenreFilterAPIView(ListAPIView):
-    queryset = Genres.objects.all()
-    serializer_class = GenresSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_class = GenreFilter
+# class GenreFilter(filters.FilterSet):
+#     genres = CharFilterInFilter(field_name='genre_name', lookup_expr='in')
+#
+#     class Meta:
+#         model = Genres
+#         fields = ['genre_name']
+#
+#
+# class GenreFilterAPIView(ListAPIView):
+#     queryset = Genres.objects.all()
+#     serializer_class = GenreDetailSerializer
+#     filter_backends = [DjangoFilterBackend]
+#     filterset_class = GenreFilter
 
 
 class TitleFilter(filters.FilterSet):
@@ -271,9 +269,16 @@ class TitleFilter(filters.FilterSet):
     ))
 class TitleFilterAPIView(ListAPIView):
     queryset = Books.objects.all()
-    serializer_class = BookSerializer
+    serializer_class = BookDetailSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
+
+    def get_queryset(self):
+        books = Books.objects.annotate(
+            middle_star=models.Sum(models.F('ratings__star__value')) / models.Count(models.F('ratings'))
+        )
+
+        return books
 
 
 class AuthorFilter(filters.FilterSet):
@@ -286,7 +291,7 @@ class AuthorFilter(filters.FilterSet):
 
 class AuthorFilterAPIView(ListAPIView):
     queryset = Books.objects.all()
-    serializer_class = BookSerializer
+    serializer_class = SuggestSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = AuthorFilter
 
@@ -300,7 +305,7 @@ class AuthorFilterAPIView(ListAPIView):
         description='Требуется указать только идентификатор книги'
     ),
 )
-class ReadingBookMarkAPIView(ListCreateAPIView,):
+class ReadingBookMarkAPIView(ListCreateAPIView, ):
     queryset = ReadingBookMark.objects.all()
     serializer_class = ReadingBookMarkSerializer
     permission_classes = (IsAuthenticated,)
@@ -315,6 +320,8 @@ class ReadingBookMarkAPIView(ListCreateAPIView,):
         if user.is_anonymous:
             raise Http404
         return ReadingBookMark.objects.filter(user=user)
+
+
 @extend_schema_view(
     delete=extend_schema(
         summary='Метод удаления книги из закладки "Читаю',
@@ -406,49 +413,23 @@ class FinishBookMarkDeleteView(generics.DestroyAPIView):
     queryset = FinishBookMark.objects.all()
 
 
-@extend_schema_view(
-    get=extend_schema(
-        summary='Фильтрация по похожим жанрам',
-        description='Необходимо передать параметр в запрос: genre_name=value\n'
-                    '\n Пример: http://localhost:8000/?query=Роман',
-        parameters=[
-            OpenApiParameter(
-                name='Фильтрация по жанрам',
-                location=OpenApiParameter.QUERY,
-                required=False,
-                type=OpenApiTypes.OBJECT
-            )
-        ],
-        examples=[
-            OpenApiExample(
-                'Пример',
-                value={"genre_name": "Pоман"}
-            )
-        ]
-    )
-)
-class SimilarGenreView(ListAPIView):
-    queryset = SimilarGenre.objects.all()
-    serializer_class = SimilarGenreSerializer
-
-
-@extend_schema_view(
-    get=extend_schema(
-        summary='Фильтрация книг по жанрам',
-        description='Необходимо передать параметр в запрос: query=value\n'
-                    '\n Пример: http://localhost:8000/?query=Роман'))
-class GenreSuggestView(ListAPIView):
-    serializer_class = BookSerializer
-
-    def get_queryset(self):
-        query = self.request.query_params.get('query', '')
-        if query:
-            return Books.objects.filter(genre__genre_name__startswith=query)[:5]
-        return Books.objects.none()
+# @extend_schema_view(
+#     get=extend_schema(
+#         summary='Фильтрация книг по жанрам',
+#         description='Необходимо передать параметр в запрос: query=value\n'
+#                     '\n Пример: http://localhost:8000/?query=Роман'))
+# class GenreSuggestView(ListAPIView):
+#     serializer_class = SuggestSerializer
+#
+#     def get_queryset(self):
+#         query = self.request.query_params.get('query', '')
+#         if query:
+#             return Books.objects.filter(genre__genre_name__startswith=query)[:5]
+#         return Books.objects.none()
 
 
 class TitleSuggestView(ListAPIView):
-    serializer_class = BookSerializer
+    serializer_class = SuggestSerializer
 
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
@@ -457,29 +438,8 @@ class TitleSuggestView(ListAPIView):
         return Books.objects.none()
 
 
-@extend_schema_view(
-    get=extend_schema(
-        summary='Фильтрация по автору',
-        description='Необходимо передать параметр в запрос: query=value\n'
-                    '\n Пример: http://localhost:8000/?query=Чингиз Айтматов',
-        parameters=[
-            OpenApiParameter(
-                name='Фильтрация по автору',
-                location=OpenApiParameter.QUERY,
-                required=False,
-                type=OpenApiTypes.OBJECT
-            )
-        ],
-        examples=[
-            OpenApiExample(
-                'Пример',
-                value={"query": "Чингиз Айтматов"}
-            )
-        ]
-    )
-)
 class AuthorSuggestView(ListAPIView):
-    serializer_class = BookSerializer
+    serializer_class = SuggestSerializer
 
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
