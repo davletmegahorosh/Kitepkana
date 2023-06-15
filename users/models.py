@@ -1,15 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
-
+from .service import generate_verify_code
 
 class UserManager(BaseUserManager):
     def create_user(self, email, username, password=None, user_photo=None,
-                    first_name=None, last_name=None, gender=None, **extra_fields):
+                    first_name=None, last_name=None, gender=None, verify_code=None, **extra_fields):
         if not email:
             raise ValueError('Введите действительный адрес электронной почты')
+        code = generate_verify_code()
 
         email = self.normalize_email(email)
-        user = self.model(email=email, username=username, **extra_fields)
+        user = self.model(email=email, username=username, verify_code=code, **extra_fields)
 
         user.set_password(password)
         user.save()
@@ -42,7 +43,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=30, unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-
+    verify_code = models.CharField(max_length=10)
     objects = UserManager()
 
     USERNAME_FIELD = 'email'

@@ -14,9 +14,8 @@ urlpatterns = [
     path('', include('admins.urls')),
 
     # USER
-    path('auth/', include('djoser.urls')),
+    path('auth/', include('users.urls')),
     path('auth/', include('djoser.urls.jwt')),
-    path('', include('users.urls')),
 
     # DRF-SPECTACULAR
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
