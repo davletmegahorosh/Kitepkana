@@ -1,26 +1,52 @@
+from django.db import models
+from django.db.models.functions import Round
 from django.shortcuts import get_object_or_404
 from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from users.models import User, Profile
+from .service import get_object_or_void
+from users.serializers import ForReviewProfileSerializer
 from .models import RatingStar
 from .models import Books, Genres, Authors, Review, Favorite, Rating
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 
 
+class StarsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RatingStar
+        fields = ("value",)
+
+
 class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Books
-        fields = 'id cover title summary pages author genre file genre author_name'.split(' ')
+        fields = 'id cover title summary author genre file genre author_name'.split(' ')
 
 
-class AuthorSerializer(serializers.ModelSerializer):
+###AUTHOR
+class BookTitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Books
+        fields = 'id title'.split(' ')
+
+
+class AuthorListSerializer(serializers.HyperlinkedModelSerializer):
+    works = serializers.SerializerMethodField()
+
     class Meta:
         model = Authors
-        fields = '__all__'
+        fields = ("id", "url", "image", "short_story", "awards", "works")
 
+    def get_works(self, id):
+        books = Books.objects.filter(author=id)
+        serializer = BookTitleSerializer(books, many=True).data
+        return serializer
+
+
+##Author
 
 class GenresSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Genres
         fields = ('genre_name',)
@@ -29,19 +55,31 @@ class GenresSerializer(serializers.ModelSerializer):
 class GenreSimpleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genres
-        fields = ('genre_name',)
+        fields = ('id', 'genre_name',)
 
 
-class ReviewSerializer(serializers.ModelSerializer):
+class RatingSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Review
-        fields = 'id get_user get_book text created_date updated_date user book'.split(' ')
+        model = Rating
+        fields = ("star",)
 
 
+# Review
 class ReviewListSerializer(serializers.ModelSerializer):
+    profile = ForReviewProfileSerializer()
+    user_stars = serializers.SerializerMethodField()
+
     class Meta:
         model = Review
-        fields = 'id get_user get_book text created_date updated_date'.split(' ')
+        fields = 'id text created_date updated_date profile user_stars'.split(' ')
+
+    def get_user_stars(self, review):
+        # filtered = Rating.objects.get(book=review.book, user=review.profile)
+        rate = get_object_or_void(Rating, book=review.book, user=review.profile)
+        data = RatingSerializer(rate).data
+        stars = get_object_or_void(RatingStar, id=data['star'])
+        serializer = StarsSerializer(stars).data
+        return serializer
 
 
 class ReviewCreateSerializer(serializers.ModelSerializer):
@@ -54,13 +92,15 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         try:
             book = validated_data['book']
         except KeyError:
-            raise ValidationError({"book":["This field is required."]})
+            raise ValidationError({"book": ["This field is required."]})
         try:
             text = validated_data['text']
         except KeyError:
-            raise ValidationError({"text":["This field is required."]})
+            raise ValidationError({"text": ["This field is required."]})
 
-        review = Review.objects.create(user=user, book=book, text=text)
+        profile = get_object_or_404(Profile, user=user)
+
+        review = Review.objects.create(profile=profile, book=book, text=text)
         return review
 
     def update(self, instance, validated_data):
@@ -69,24 +109,41 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         return instance
 
 
+####BOOK
+class BookListSerializer(serializers.HyperlinkedModelSerializer):
+    middle_star = serializers.FloatField()
+
+    class Meta:
+        model = Books
+        fields = ("id", "title", "cover", "author_name", "middle_star", "url")
+
+
 class BookDetailSerializer(serializers.ModelSerializer):
     genre = GenreSimpleSerializer(many=True)
     reviews = ReviewListSerializer(many=True)
-    middle_star = serializers.IntegerField()
+    middle_star = serializers.FloatField()
+    similar_books = serializers.SerializerMethodField()
 
     class Meta:
         model = Books
-        fields = ('id', 'title', 'cover', 'summary', 'author_name', 'middle_star', 'pages', 'file',
-                  'author', 'genre', 'reviews')
+        fields = ('id', 'cover', 'title', 'author_name', 'publication_year', 'genre', 'middle_star', 'file', 'summary',
+                  'reviews', 'similar_books')
+
+    def get_similar_books(self, books):
+        filter_genre = GenreSimpleSerializer(books.genre, many=True).data
+        genres_id = [key['id'] for key in filter_genre]
+        genres = Genres.objects.filter(id__in=genres_id)
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+        average = Round(total_rating_value, precision=1)
+        queryset = Books.objects.annotate(
+            middle_star=average
+        ).filter(genre__in=genres).distinct()
+        serializer_context = {'request': self.context['request']}
+        response = BookListSerializer(queryset, many=True, context=serializer_context).data
+        return response
 
 
-class BookListSerializer(serializers.HyperlinkedModelSerializer):
-    middle_star = serializers.IntegerField()
-
-    class Meta:
-        model = Books
-        fields = ("id", "title", "cover", "middle_star", "url")
-
+###Book
 
 class BookSimpleSerializer(BookListSerializer):
     class Meta:
@@ -106,12 +163,6 @@ class GenreListSerializer(serializers.HyperlinkedModelSerializer):
         fields = ("id", "genre_name", "url",)
 
 
-class AuthorListSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Authors
-        fields = ("id", "url", "fullname")
-
-
 class GenreDetailSerializer(serializers.ModelSerializer):
     genre_books = BookSimpleSerializer(many=True)
 
@@ -121,30 +172,25 @@ class GenreDetailSerializer(serializers.ModelSerializer):
 
 
 class AuthorDetailSerializer(serializers.ModelSerializer):
-    author_books = BookSimpleSerializer(many=True)
+    author_books = serializers.SerializerMethodField()
 
     class Meta:
         model = Authors
-        fields = ("id", "fullname", "author_books")
+        fields = ("id", "image", "fullname", "date_of_birth", "place_of_birth", "language", "genre", "bio", "literary_activity",
+                  "author_books",)
+
+    def get_author_books(self, authors):
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+
+        average = Round(total_rating_value, precision=1)
+        queryset = Books.objects.annotate(
+            middle_star=average
+        ).filter(author=authors).distinct()
+        serializer_context = {'request': self.context['request']}
+        serializer = BookListSerializer(queryset, many=True, context=serializer_context).data
+        return serializer
 
 
-@extend_schema_serializer(
-    examples=[
-        OpenApiExample(
-            'Simple example',
-            value=1,
-            request_only=True,
-            response_only=False,
-        ),
-        OpenApiExample(
-            'Single param example',
-            value={"s": 1},
-            request_only=True,
-            response_only=False,
-
-        ),
-    ],
-)
 class CreateRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
@@ -200,7 +246,7 @@ class FavoriteCreateSerializer(serializers.ModelSerializer):
         try:
             book = validated_data['book']
         except KeyError:
-            raise ValidationError({"book":["This field is required."]})
+            raise ValidationError({"book": ["This field is required."]})
         exist_obj = Favorite.objects.filter(user=user, book=book)
         if exist_obj:
             raise ValidationError("Данная книга уже имеется во вкладке 'Избранное'")

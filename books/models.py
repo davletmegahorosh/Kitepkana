@@ -1,11 +1,20 @@
 from django.db import models
 from django.urls import reverse
-from users.models import User
+from users.models import User, Profile
 from .genres_list import GENRE_CHOICES
 
 
 class Authors(models.Model):
+    image = models.ImageField(upload_to='')
     fullname = models.CharField(max_length=100)
+    bio = models.TextField()
+    short_story = models.CharField(max_length=100)
+    genre = models.CharField()
+    language = models.CharField(max_length=50)
+    date_of_birth = models.CharField()
+    place_of_birth = models.CharField(max_length=200)
+    literary_activity = models.TextField()
+    awards = models.TextField()
 
     class Meta:
         verbose_name = "Автор"
@@ -40,9 +49,9 @@ class Books(models.Model):
     title = models.CharField(max_length=100)
     author = models.ForeignKey(Authors, on_delete=models.CASCADE, null=True, blank=True, related_name='author_books')
     summary = models.TextField()
-    pages = models.IntegerField()
     genre = models.ManyToManyField(Genres, related_name='genre_books')
     file = models.FileField(upload_to='', null=True, blank=True)
+    publication_year = models.CharField(max_length=100)
 
     class Meta:
         ordering = ['cover', 'title', 'author']
@@ -92,7 +101,7 @@ class Review(models.Model):
     text = models.TextField(help_text='Оставь комментарии')
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(User, verbose_name="Пользователь", on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, verbose_name="Пользователь", on_delete=models.CASCADE, related_name='profile')
 
     class Meta:
         verbose_name = "Отзыв"
@@ -107,6 +116,7 @@ class Review(models.Model):
 
     def get_book(self):
         return str(self.book)
+
 
 
 class Favorite(models.Model):

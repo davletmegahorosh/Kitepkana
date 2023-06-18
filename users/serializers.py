@@ -39,6 +39,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         return value
 
 
+class ForReviewProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ("username", "user_photo")
+
+
 class CodeSerializer(serializers.Serializer):
     code = serializers.CharField()
 

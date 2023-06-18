@@ -8,12 +8,13 @@ from .views import AuthorListView, AuthorDetailView, GenreListView, GenreDetailV
 from .views import BookListView, BookDetailView, RecommendedBooks, AddStarRatingView, ReviewViewSet, \
     FavoriteListCreateView, FavoriteDeleteView, FinishBookMarkDeleteView, WillReadBookMarkDeleteView,\
     ReadingBookMarkDeleteView
-
+from .views import MainPageView
 
 router = routers.SimpleRouter()
 router.register(r'reviews', ReviewViewSet)
 
 urlpatterns = [
+    path('main/', MainPageView.as_view(), name='authors-detail'),
     path('authors/', AuthorListView.as_view(), name='author-list'),
     path('authors/<int:pk>/', AuthorDetailView.as_view(), name='authors-detail'),
     path('genres/', GenreListView.as_view(), name='genres-list'),

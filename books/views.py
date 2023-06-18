@@ -1,3 +1,4 @@
+from django.db.models.functions import Round
 from django.http import Http404
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, generics, mixins
@@ -8,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Books, Genres, Authors, Review, Favorite
 from .permissions_book import IsOwner
-from .serializers import  ReviewSerializer, FavoriteCreateSerializer, \
+from .serializers import   ReviewListSerializer, FavoriteCreateSerializer, \
     FavoriteSerializer, CreateRatingSerializer
 from rest_framework import viewsets
 from random import sample
@@ -54,6 +55,7 @@ class AuthorDetailView(generics.GenericAPIView,
 
     def get(self, request: Request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
+
 
 
 @extend_schema_view(
@@ -103,9 +105,10 @@ class BookListView(generics.GenericAPIView,
         return self.list(request, *args, **kwargs)
 
     def get_queryset(self):
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+        res = Round(total_rating_value, precision=1)
         books = Books.objects.annotate(
-            middle_star=models.Sum(models.F('ratings__star__value')) / models.Count(models.F('ratings'))
-        )
+            middle_star=res)
         return books
 
 
@@ -125,11 +128,13 @@ class BookDetailView(generics.GenericAPIView,
         return self.retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+        res = Round(total_rating_value, precision=1)
         books = Books.objects.annotate(
-            middle_star=models.Sum(models.F('ratings__star__value')) / models.Count(models.F('ratings'))
-        )
+            middle_star=res)
 
         return books
+
 
 
 @extend_schema_view(
@@ -159,14 +164,14 @@ class BookDetailView(generics.GenericAPIView,
 )
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
+    serializer_class = ReviewListSerializer
 
     def get_serializer_class(self):
         if self.action == 'create' or self.action == 'destroy' or self.action == 'update':
             return ReviewCreateSerializer
         if self.action == 'list':
             return ReviewListSerializer
-        return ReviewSerializer
+        return ReviewListSerializer
 
     def get_permissions(self):
 
@@ -471,3 +476,16 @@ class AddStarRatingView(APIView):
         serializer.is_valid(raise_exception=True)
         serializer.save(user=get_client_username(request))
         return Response(status=status.HTTP_201_CREATED)
+
+
+class MainPageView(APIView):
+    author_list_serializer = AuthorListSerializer
+
+    def get(self, request):
+        serializer_context = {
+            'request': request,
+        }
+        authors = Authors.objects.all()
+        author_list_serializer = self.author_list_serializer(authors, many=True, context=serializer_context).data
+        return Response(data= {'author_list': author_list_serializer})
+
