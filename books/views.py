@@ -1,15 +1,16 @@
 from django.db.models.functions import Round
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from pypdf import PdfReader
 from rest_framework import status, generics, mixins
 from rest_framework.generics import get_object_or_404, ListAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Books, Genres, Authors, Review, Favorite
+from .models import Books, Genres, Authors, Review, Favorite, Page
 from .permissions_book import IsOwner
-from .serializers import   ReviewListSerializer, FavoriteCreateSerializer, \
+from .serializers import ReviewListSerializer, FavoriteCreateSerializer, \
     FavoriteSerializer, CreateRatingSerializer
 from rest_framework import viewsets
 from random import sample
@@ -17,13 +18,14 @@ from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 from .serializers import ReadingBookMarkSerializer, WillReadBookMarkSerializer, FinishBookMarkSerializer
-from .service import get_client_username
+from .service import get_client_username, parse_pdf, BookAPIPagination
 from .serializers import AuthorListSerializer, AuthorDetailSerializer
 from .serializers import GenreListSerializer, GenreDetailSerializer, BookListSerializer
-from .serializers import BookDetailSerializer,  FinishBookMarkCreateSerializer
+from .serializers import BookDetailSerializer, FinishBookMarkCreateSerializer
 from .serializers import WillReadBookMarkCreateSerializer, ReadingBookMarkCreateSerializer, ReviewCreateSerializer
-from .serializers import ReviewListSerializer, SuggestSerializer
+from .serializers import ReviewListSerializer, SuggestSerializer, PageBookSerializer, GetFileFieldFromBookSerializer
 from django.db import models
+from Kitepkanaproject.settings import BASE_DIR
 
 
 @extend_schema_view(
@@ -55,7 +57,6 @@ class AuthorDetailView(generics.GenericAPIView,
 
     def get(self, request: Request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
-
 
 
 @extend_schema_view(
@@ -134,7 +135,6 @@ class BookDetailView(generics.GenericAPIView,
             middle_star=res)
 
         return books
-
 
 
 @extend_schema_view(
@@ -487,5 +487,77 @@ class MainPageView(APIView):
         }
         authors = Authors.objects.all()
         author_list_serializer = self.author_list_serializer(authors, many=True, context=serializer_context).data
-        return Response(data= {'author_list': author_list_serializer})
+        return Response(data={'author_list': author_list_serializer})
 
+
+class ReadingBookView(generics.GenericAPIView):
+    queryset = Page.objects.all()
+    pagination_class = BookAPIPagination
+    serializer_class = PageBookSerializer
+    # permission_classes = (IsAuthenticated,)
+
+    def get(self, request, *args, **kwargs):
+        book = get_object_or_404(Books, id=self.kwargs.get('pk'))
+        filtered_data = Page.objects.filter(book=book)
+        end_pages = len(filtered_data)
+        get_page = request.GET.get('page')
+        current_page = get_page
+        user = request.user
+        if current_page is None:
+            current_page = 1
+        else:
+            pass
+        # checking page
+
+        if int(current_page) >= 1 and int(current_page)< end_pages:
+            print('start index')
+            # Create ReadingBookmarkObject
+            exist_obj = ReadingBookMark.objects.filter(user=user, book=book)
+            if exist_obj:
+                pass
+            elif not exist_obj:
+                finish = ReadingBookMark.objects.create(user=user, book=book)
+                finish.save()
+
+            # Create FinishBookmarkobject
+        elif int(current_page) == end_pages:
+            bookmark_reading = ReadingBookMark.objects.get(user=user, book=book)
+            if bookmark_reading:
+                bookmark_reading.delete()
+            exist_obj = FinishBookMark.objects.filter(user=user, book=book)
+            if exist_obj:
+                pass
+            elif not exist_obj:
+                finish = FinishBookMark.objects.create(user=user, book=book)
+                finish.save()
+
+            print('end index')
+
+        queryset = self.filter_queryset(filtered_data)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class ForBookCreatePagesAPIView(generics.GenericAPIView):
+    queryset = Page.objects.all()
+    serializer_class = PageBookSerializer
+    permission_classes = (IsAdminUser,)
+
+    def get(self, request, *args, **kwargs):
+        book = get_object_or_404(Books, id=self.kwargs.get('pk'))
+        book_serializer = GetFileFieldFromBookSerializer(book, many=False).data
+        filepath = f"{BASE_DIR}{book_serializer['file']}"
+        reader = PdfReader(filepath)
+        for page in reader.pages:
+            text = page.extract_text()
+            Page.objects.create(
+                text=text,
+                book=book
+            )
+
+        return Response(data='Page objects created')

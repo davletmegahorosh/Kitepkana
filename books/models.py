@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from social_core.utils import build_absolute_uri
 from users.models import User, Profile
 from .genres_list import GENRE_CHOICES
 
@@ -59,7 +60,8 @@ class Books(models.Model):
         verbose_name_plural = "Книги"
 
     def get_absolute_url(self):
-        return reverse('books_detail', kwargs={"pk": self.pk})
+        return build_absolute_uri(reverse('books-detail', kwargs={"pk": self.pk}))
+        # return reverse('books-detail', kwargs={"pk": self.pk})
 
     def __str__(self):
         return f"{str(self.title)}"
@@ -116,7 +118,6 @@ class Review(models.Model):
 
     def get_book(self):
         return str(self.book)
-
 
 
 class Favorite(models.Model):
@@ -180,3 +181,15 @@ class FinishBookMark(models.Model):
 
     def __str__(self):
         return f'{self.user.username} bookmarked {self.book.title}'
+
+
+class Page(models.Model):
+    book = models.ForeignKey(Books, on_delete=models.CASCADE, related_name='book', verbose_name='страницы ')
+    text = models.TextField()
+
+    class Meta:
+        verbose_name = "Cтраница"
+        verbose_name_plural = "Страницы"
+
+    def __str__(self):
+        return f'{self.book} page: {self.id}'

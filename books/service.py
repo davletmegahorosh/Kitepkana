@@ -1,5 +1,7 @@
 from django.shortcuts import get_object_or_404, _get_queryset
-from rest_framework.exceptions import ValidationError
+from pypdf import PdfReader
+from rest_framework.pagination import PageNumberPagination
+
 
 from users.models import User
 
@@ -33,3 +35,25 @@ def get_object_or_void(klass, *args, **kwargs):
         return queryset.get(*args, **kwargs)
     except queryset.model.DoesNotExist:
         return
+
+
+def parse_pdf(filename):
+    data_ls = []
+    count = 0
+
+    reader = PdfReader(filename)
+    pages = reader.pages
+    for page in pages:
+        count += 1
+        data_ls.append({f"{count}": page.extract_text()})
+
+    return data_ls
+
+
+class BookAPIPagination(PageNumberPagination):
+    page_size = 1
+    max_page_size = 10000
+    signal_start = None
+
+
+

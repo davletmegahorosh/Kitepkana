@@ -1,19 +1,21 @@
 from django.urls import path, include
 from rest_framework import routers
 from rest_framework.routers import SimpleRouter
-from .views import  TitleFilterAPIView, AuthorFilterAPIView, ReadingBookMarkAPIView, \
+from .views import TitleFilterAPIView, AuthorFilterAPIView, ReadingBookMarkAPIView, \
     WillReadBookMarkAPIView, FinishBookMarkAPIView, TitleSuggestView, \
-    AuthorSuggestView
+    AuthorSuggestView, ReadingBookView
 from .views import AuthorListView, AuthorDetailView, GenreListView, GenreDetailView
 from .views import BookListView, BookDetailView, RecommendedBooks, AddStarRatingView, ReviewViewSet, \
     FavoriteListCreateView, FavoriteDeleteView, FinishBookMarkDeleteView, WillReadBookMarkDeleteView,\
-    ReadingBookMarkDeleteView
+    ReadingBookMarkDeleteView, ForBookCreatePagesAPIView
 from .views import MainPageView
 
 router = routers.SimpleRouter()
 router.register(r'reviews', ReviewViewSet)
 
 urlpatterns = [
+    path('create_page_book/<int:pk>/', ForBookCreatePagesAPIView.as_view()),
+    path('read/book/<int:pk>/', ReadingBookView.as_view(), name='books-detail'),
     path('main/', MainPageView.as_view(), name='authors-detail'),
     path('authors/', AuthorListView.as_view(), name='author-list'),
     path('authors/<int:pk>/', AuthorDetailView.as_view(), name='authors-detail'),

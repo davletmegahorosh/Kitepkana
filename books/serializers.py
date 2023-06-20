@@ -1,13 +1,12 @@
 from django.db import models
 from django.db.models.functions import Round
 from django.shortcuts import get_object_or_404
-from drf_spectacular.utils import extend_schema_serializer, OpenApiExample
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from users.models import User, Profile
 from .service import get_object_or_void
 from users.serializers import ForReviewProfileSerializer
-from .models import RatingStar
+from .models import RatingStar, Page
 from .models import Books, Genres, Authors, Review, Favorite, Rating
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
 
@@ -176,8 +175,9 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Authors
-        fields = ("id", "image", "fullname", "date_of_birth", "place_of_birth", "language", "genre", "bio", "literary_activity",
-                  "author_books",)
+        fields = (
+        "id", "image", "fullname", "date_of_birth", "place_of_birth", "language", "genre", "bio", "literary_activity",
+        "author_books",)
 
     def get_author_books(self, authors):
         total_rating_value = models.Avg(models.F('ratings__star__value'))
@@ -348,3 +348,16 @@ class FinishBookMarkCreateSerializer(serializers.ModelSerializer):
             raise ValidationError("Данная книга уже имеется во вкладке 'Прочитано' ")
         finish = FinishBookMark.objects.create(user=user, book=book)
         return finish
+
+
+class PageBookSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Page
+        fields = ("id", "text")
+
+
+class GetFileFieldFromBookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Books
+        fields = ("file",)
