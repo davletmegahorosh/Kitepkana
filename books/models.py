@@ -16,6 +16,7 @@ class Authors(models.Model):
     place_of_birth = models.CharField(max_length=200)
     literary_activity = models.TextField()
     awards = models.TextField()
+    citizenship = models.CharField(max_length=150)
 
     class Meta:
         verbose_name = "Автор"

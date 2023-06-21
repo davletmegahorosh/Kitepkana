@@ -1,31 +1,23 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, update_session_auth_hash
 from django.contrib.auth.tokens import default_token_generator
 from djoser import signals
 from djoser.compat import get_user_email
 from djoser.conf import settings
-from drf_spectacular.utils import extend_schema_view, extend_schema
+from djoser import utils
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 import users.serializers
 from .models import Profile
-from .serializers import ProfileSerializer
+from .serializers import  ProfileSerializer
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from djoser.views import UserViewSet
 from users.email import ActivationEmail, ConfirmationEmail
 User = get_user_model()
-@extend_schema_view(
-    get=extend_schema(
-        summary='Метод для получения детальной информации о профиле пользователя',
-    ),
-    put=extend_schema(
-        summary='Метод для изменения профиля пользователя',
-    ),
-    patch=extend_schema(
-        summary='Метод для частичного изменения профиля пользователя',
-    ))
+
+
 class ProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
     """
     Вьюшка для того чтобы пользователь мог получать свои данные, а также
@@ -41,11 +33,12 @@ class ProfileRetrieveUpdateView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileSerializer
     lookup_field = 'username'
 
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ProfileSerializer
+        return ProfileSerializer
 
-@extend_schema_view(
-    delete=extend_schema(
-        summary='Метод для удаления профиля пользователя',
-    ))
+
 class ProfileDeleteView(APIView):
     """
     Вьюшка для удаления профиля пользователя
@@ -166,6 +159,26 @@ class CustomDjoserViewSet(UserViewSet):
             ConfirmationEmail(self.request, context).send(to)
 
         return Response(status=status.HTTP_200_OK, data={"message": "Ваш аккаунт активирован"})
+
+    @action(["post"], detail=False)
+    def set_password(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        self.request.user.set_password(serializer.data["new_password"])
+        self.request.user.stash = serializer.data["new_password"]
+        self.request.user.save()
+
+        if settings.PASSWORD_CHANGED_EMAIL_CONFIRMATION:
+            context = {"user": self.request.user}
+            to = [get_user_email(self.request.user)]
+            settings.EMAIL.password_changed_confirmation(self.request, context).send(to)
+
+        if settings.LOGOUT_ON_PASSWORD_CHANGE:
+            utils.logout_user(self.request)
+        elif settings.CREATE_SESSION_ON_LOGIN:
+            update_session_auth_hash(self.request, self.request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(["post"], detail=False)
     def resend_activation(self, request, *args, **kwargs):

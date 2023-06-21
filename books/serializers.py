@@ -18,9 +18,11 @@ class StarsSerializer(serializers.ModelSerializer):
 
 
 class BookSerializer(serializers.ModelSerializer):
+    middle_star = serializers.FloatField()
+
     class Meta:
         model = Books
-        fields = 'id cover title summary author genre file genre author_name'.split(' ')
+        fields = 'id cover title summary author_name middle_star'.split(' ')
 
 
 ###AUTHOR
@@ -176,8 +178,9 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Authors
         fields = (
-        "id", "image", "fullname", "date_of_birth", "place_of_birth", "language", "genre", "bio", "literary_activity",
-        "author_books",)
+            "id", "image", "fullname", "date_of_birth", "place_of_birth", "language", "genre", "bio",
+            "literary_activity",
+            "author_books",)
 
     def get_author_books(self, authors):
         total_rating_value = models.Avg(models.F('ratings__star__value'))
@@ -254,20 +257,6 @@ class FavoriteCreateSerializer(serializers.ModelSerializer):
         return favorite
 
 
-class ReadingBookMarkSerializer(serializers.ModelSerializer):
-    book_cover = serializers.SerializerMethodField()
-
-    class Meta:
-        model = ReadingBookMark
-        fields = ("id", "book_title", "book_cover")
-
-    def get_book_cover(self, readingbookmark):
-        obj = get_object_or_404(Books, pk=readingbookmark.book.id)
-        serializer = BookSerializer(obj, many=False).data
-        book_cover = serializer['cover']
-        return book_cover
-
-
 class ReadingBookMarkCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingBookMark
@@ -318,20 +307,6 @@ class WillReadBookMarkCreateSerializer(serializers.ModelSerializer):
         return will
 
 
-class FinishBookMarkSerializer(serializers.ModelSerializer):
-    book_cover = serializers.SerializerMethodField()
-
-    class Meta:
-        model = FinishBookMark
-        fields = ("id", "book_title", "book_cover",)
-
-    def get_book_cover(self, finishbookmark):
-        obj = get_object_or_404(Books, pk=finishbookmark.book.id)
-        serializer = BookSerializer(obj, many=False).data
-        book_cover = serializer['cover']
-        return book_cover
-
-
 class FinishBookMarkCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = FinishBookMark
@@ -351,7 +326,6 @@ class FinishBookMarkCreateSerializer(serializers.ModelSerializer):
 
 
 class PageBookSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Page
         fields = ("id", "text")
