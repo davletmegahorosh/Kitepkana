@@ -58,10 +58,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     password = serializers.SerializerMethodField()
     reading = serializers.SerializerMethodField()
     finish = serializers.SerializerMethodField()
+    favorite = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
-        fields = ("user_photo", "username", "email", "password", "reading", "finish")
+        fields = ("user_photo", "username", "email", "password", "reading", "finish", "favorite")
 
     def get_email(self, profile):
         user = get_object_or_404(User, email=profile.user)
@@ -74,20 +75,22 @@ class ProfileSerializer(serializers.ModelSerializer):
     def get_reading(self, profile):
         from books.serializers import ReadingBookMarkCreateSerializer, BookSerializer
         from books.models import ReadingBookMark, Books
+        serializer_context = {'request': self.context['request']}
         filter_bookmark = ReadingBookMark.objects.filter(user=profile.user)
         serializer = ReadingBookMarkCreateSerializer(filter_bookmark, many=True).data
         book_id_list = [item['book'] for item in serializer]
         total_rating_value = models.Avg(models.F('ratings__star__value'))
         average = Round(total_rating_value, precision=1)
         queryset = Books.objects.annotate(
-            middle_star=average
+            middle_star=average,
         ).filter(id__in=book_id_list)
-        books_serializer = BookSerializer(queryset, many=True).data
+        books_serializer = BookSerializer(queryset, many=True, context=serializer_context).data
         return books_serializer
 
     def get_finish(self, profile):
         from books.serializers import FinishBookMarkCreateSerializer, BookSerializer
         from books.models import FinishBookMark,Books
+        serializer_context = {'request': self.context['request']}
         filter_bookmark = FinishBookMark.objects.filter(user=profile.user)
         serializer = FinishBookMarkCreateSerializer(filter_bookmark, many=True).data
         book_id_list = [item['book'] for item in serializer]
@@ -96,7 +99,22 @@ class ProfileSerializer(serializers.ModelSerializer):
         queryset = Books.objects.annotate(
             middle_star=average
         ).filter(id__in=book_id_list)
-        books_serializer = BookSerializer(queryset, many=True).data
+        books_serializer = BookSerializer(queryset, many=True, context=serializer_context).data
+        return books_serializer
+
+    def get_favorite(self, profile):
+        from books.serializers import FavoriteCreateSerializer, BookSerializer
+        from books.models import Favorite,Books
+        serializer_context = {'request': self.context['request']}
+        filter_bookmark = Favorite.objects.filter(user=profile.user)
+        serializer = FavoriteCreateSerializer(filter_bookmark, many=True).data
+        book_id_list = [item['book'] for item in serializer]
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+        average = Round(total_rating_value, precision=1)
+        queryset = Books.objects.annotate(
+            middle_star=average
+        ).filter(id__in=book_id_list)
+        books_serializer = BookSerializer(queryset, many=True, context=serializer_context).data
         return books_serializer
 
 

@@ -17,7 +17,7 @@ class StarsSerializer(serializers.ModelSerializer):
         fields = ("value",)
 
 
-class BookSerializer(serializers.ModelSerializer):
+class BookSerializer(serializers.HyperlinkedModelSerializer):
     middle_star = serializers.FloatField()
 
     class Meta:
@@ -127,7 +127,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Books
-        fields = ('id', 'cover', 'title', 'author_name', 'publication_year', 'genre', 'middle_star', 'file', 'summary',
+        fields = ('id', 'cover', 'title', 'author_name', 'publication_year', 'genre', 'middle_star',  'summary',
                   'reviews', 'similar_books')
 
     def get_similar_books(self, books):
@@ -178,7 +178,7 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Authors
         fields = (
-            "id", "image", "fullname", "date_of_birth", "place_of_birth", "language", "genre", "bio",
+            "id", "image", "fullname", "date_of_birth", "place_of_birth", "citizenship","language", "genre", "bio",
             "literary_activity",
             "author_books",)
 

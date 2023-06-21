@@ -14,7 +14,7 @@ router.register(r'reviews', ReviewViewSet)
 
 urlpatterns = [
     path('create_page_book/<int:pk>/', ForBookCreatePagesAPIView.as_view()),
-    path('read/book/<int:pk>/', ReadingBookView.as_view(), name='books-detail'),
+    path('read/book/<int:pk>/', ReadingBookView.as_view(), name='read_book'),
     path('main/', MainPageView.as_view(), name='authors-detail'),
     path('authors/', AuthorListView.as_view(), name='author-list'),
     path('authors/<int:pk>/', AuthorDetailView.as_view(), name='authors-detail'),
@@ -32,9 +32,7 @@ urlpatterns += [
     path('titles_filter/', TitleFilterAPIView.as_view(), name='titles_filter'),
     path('authors_filter/', AuthorFilterAPIView.as_view(), name='authors_filter'),
     path('read_bookmark/<int:pk>/', ReadingBookMarkDeleteView.as_view(), name='read_bookmark-detail'),
-    path('will_read_bookmark/<int:pk>/', WillReadBookMarkDeleteView.as_view(), name='will_read_bookmark-detail'),
     path('finish_bookmark/<int:pk>/', FinishBookMarkDeleteView.as_view(), name='finish-detail'),
-    path('favorite/', FavoriteListCreateView.as_view(), name='favorite'),
     path('favorite/<int:pk>/', FavoriteDeleteView.as_view(), name='favorite_detail'),
     path('title_suggest/', TitleSuggestView.as_view(), name='title_suggest'),
     path('author_suggest/', AuthorSuggestView.as_view(), name='author_suggest')
