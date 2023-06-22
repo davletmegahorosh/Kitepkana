@@ -214,6 +214,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 # ]
 
 JAZZMIN_SETTINGS={
-    "site_title" : "kitepkana",
-    "site_header" : "kitepkana"
+    "site_title" : "muras",
+    "site_header" : "muras"
 }
