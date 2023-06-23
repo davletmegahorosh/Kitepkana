@@ -9,22 +9,23 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Books, Genres, Authors, Review, Favorite, Page
 from .permissions_book import IsOwner
-from .serializers import  FavoriteCreateSerializer, \
+from .serializers import FavoriteCreateSerializer, \
     FavoriteSerializer, CreateRatingSerializer
 from rest_framework import viewsets
 from random import sample
 from django_filters import rest_framework as filters
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
-from books.serializers import  WillReadBookMarkSerializer
+from books.serializers import WillReadBookMarkSerializer
 from .service import get_client_username, BookAPIPagination
 from .serializers import AuthorListSerializer, AuthorDetailSerializer
 from .serializers import GenreListSerializer, GenreDetailSerializer, BookListSerializer
 from .serializers import BookDetailSerializer, FinishBookMarkCreateSerializer
-from .serializers import  ReadingBookMarkCreateSerializer, ReviewCreateSerializer
+from .serializers import ReadingBookMarkCreateSerializer, ReviewCreateSerializer
 from .serializers import ReviewListSerializer, SuggestSerializer, PageBookSerializer, GetFileFieldFromBookSerializer
 from django.db import models
 from Kitepkanaproject.settings import BASE_DIR
+from django.conf import settings
 
 
 class AuthorListView(generics.GenericAPIView,
@@ -238,6 +239,7 @@ class ReadingBookMarkDeleteView(generics.DestroyAPIView):
     serializer_class = ReadingBookMarkCreateSerializer
     queryset = ReadingBookMark.objects.all()
 
+
 #
 # class WillReadBookMarkAPIView(generics.ListCreateAPIView):
 #     queryset = WillReadBookMark.objects.all()
@@ -322,21 +324,49 @@ class AddStarRatingView(APIView):
 
 class MainPageView(APIView):
     author_list_serializer = AuthorListSerializer
+    permission_classes = (AllowAny,)
 
     def get(self, request):
         serializer_context = {
             'request': request,
         }
-        authors = Authors.objects.all()
-        author_list_serializer = self.author_list_serializer(authors, many=True, context=serializer_context).data
-        return Response(data={'author_list': author_list_serializer})
+        # Deployment objects
+        authors = Authors.objects.all()  # <------for author_list_serializer
+        total_rating_value = models.Avg(models.F('ratings__star__value'))  # <--- for best_book_serializer
+        average = Round(total_rating_value, precision=1)
+        filtered_the_best_books = Books.objects.annotate(
+            middle_star=average
+        ).filter(middle_star__gt=3)
+        recommended_queryset = Books.objects.annotate(  # <--- for best_book_serializer
+            middle_star=average
+        ).all()
+        divide_recommended_queryset = len(recommended_queryset) // 2
+        complete_recommended = sample(list(recommended_queryset), divide_recommended_queryset)
+        manas_book = Books.objects.annotate(
+            middle_star=average
+        ).filter(title='Манас')  # <--- for manas_book_serializer
+
+        # serializers
+        recommended_books_serializer = \
+            BookListSerializer(complete_recommended, many=True, context=serializer_context).data
+        best_book_serializer = \
+            BookListSerializer(filtered_the_best_books, many=True, context=serializer_context).data
+        author_list_serializer = \
+            self.author_list_serializer(authors, many=True, context=serializer_context).data
+
+        manas_book_serializer = BookListSerializer(manas_book, many=True, context=serializer_context).data
+        return Response(data={'our_writers': author_list_serializer,
+                              'best_books': best_book_serializer,
+                              'recommended_books': recommended_books_serializer,
+                              'manas_book': manas_book_serializer
+                              })
 
 
 class ReadingBookView(generics.GenericAPIView):
     queryset = Page.objects.all()
     pagination_class = BookAPIPagination
     serializer_class = PageBookSerializer
-    # permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
 
     def get(self, request, *args, **kwargs):
         book = get_object_or_404(Books, id=self.kwargs.get('pk'))
@@ -345,36 +375,39 @@ class ReadingBookView(generics.GenericAPIView):
         get_page = request.GET.get('page')
         current_page = get_page
         user = request.user
+
         if current_page is None:
             current_page = 1
         else:
             pass
         # checking page
+        if not user.is_anonymous:
+            if int(current_page) >= 1 and int(current_page) < end_pages:
+                print('start index')
+                # Create ReadingBookmarkObject
+                exist_obj = ReadingBookMark.objects.filter(user=user, book=book)
+                if exist_obj:
+                    pass
+                elif not exist_obj:
+                    finish = ReadingBookMark.objects.create(user=user, book=book)
+                    finish.save()
 
-        if int(current_page) >= 1 and int(current_page)< end_pages:
-            print('start index')
-            # Create ReadingBookmarkObject
-            exist_obj = ReadingBookMark.objects.filter(user=user, book=book)
-            if exist_obj:
-                pass
-            elif not exist_obj:
-                finish = ReadingBookMark.objects.create(user=user, book=book)
-                finish.save()
+                # Create FinishBookmarkobject
+            elif int(current_page) == end_pages:
+                bookmark_reading = ReadingBookMark.objects.get(user=user, book=book)
+                if bookmark_reading:
+                    bookmark_reading.delete()
+                exist_obj = FinishBookMark.objects.filter(user=user, book=book)
+                if exist_obj:
+                    pass
+                elif not exist_obj:
+                    finish = FinishBookMark.objects.create(user=user, book=book)
+                    finish.save()
 
-            # Create FinishBookmarkobject
-        elif int(current_page) == end_pages:
-            bookmark_reading = ReadingBookMark.objects.get(user=user, book=book)
-            if bookmark_reading:
-                bookmark_reading.delete()
-            exist_obj = FinishBookMark.objects.filter(user=user, book=book)
-            if exist_obj:
-                pass
-            elif not exist_obj:
-                finish = FinishBookMark.objects.create(user=user, book=book)
-                finish.save()
-
-            print('end index')
-
+                print('end index')
+        else:
+            pass
+        print(request.user)
         queryset = self.filter_queryset(filtered_data)
 
         page = self.paginate_queryset(queryset)
@@ -403,3 +436,14 @@ class ForBookCreatePagesAPIView(generics.GenericAPIView):
             )
 
         return Response(data='Page objects created')
+
+# class TestApiView(APIView):
+#
+#     def get(self, request):
+#         user = get_object_or_404(User, id=request.user.id)
+#         token_class = RefreshToken().for_user(user)
+#         data = {}
+#         data["refresh"] = str(token_class)
+#         data["access"] = str(token_class.access_token)
+#         domain = request.build_absolute_uri('/')[:-1]+'/'
+#         return Response(data=data)

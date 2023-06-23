@@ -113,10 +113,23 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 ####BOOK
 class BookListSerializer(serializers.HyperlinkedModelSerializer):
     middle_star = serializers.FloatField()
+    read_book_url = serializers.SerializerMethodField()
+    stash_book_url = False
 
     class Meta:
         model = Books
-        fields = ("id", "title", "cover", "author_name", "middle_star", "url")
+        fields = ("id", "title", "cover", "author_name", "middle_star", "read_book_url", "url")
+
+    def get_read_book_url(self, books):
+        domain = self.context['request'].build_absolute_uri('/')[:-1]+'/'
+        read_url = domain+'read/book/'+ str(books.id)+'/'
+        return read_url
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if self.stash_book_url is True:
+            data.pop('read_book_url')
+        return data
 
 
 class BookDetailSerializer(serializers.ModelSerializer):
@@ -328,7 +341,7 @@ class FinishBookMarkCreateSerializer(serializers.ModelSerializer):
 class PageBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
-        fields = ("id", "text")
+        fields = ("text",)
 
 
 class GetFileFieldFromBookSerializer(serializers.ModelSerializer):

@@ -7,8 +7,8 @@ from users.models import User
 
 
 def get_client_username(request):
-    user = get_object_or_404(User, username=request.user.username)
-    return user.username
+    user = get_object_or_404(User, email=request.user.email)
+    return user
 
 
 def get_object_or_void(klass, *args, **kwargs):

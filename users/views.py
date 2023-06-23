@@ -7,6 +7,8 @@ from djoser import utils
 from rest_framework import generics, permissions, status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
+from rest_framework_simplejwt.tokens import RefreshToken
+
 import users.serializers
 from .models import Profile
 from .serializers import  ProfileSerializer
@@ -157,8 +159,13 @@ class CustomDjoserViewSet(UserViewSet):
             context = {"user": user}
             to = [get_user_email(user)]
             ConfirmationEmail(self.request, context).send(to)
+        #
+        # token_class = RefreshToken().for_user(user)
+        # data = {}
+        # data["refresh"] = str(token_class)
+        # data["access"] = str(token_class.access_token)
 
-        return Response(status=status.HTTP_200_OK, data={"message": "Ваш аккаунт активирован"})
+        return Response(status=status.HTTP_200_OK, data={"message": "Сервер активирован"})
 
     @action(["post"], detail=False)
     def set_password(self, request, *args, **kwargs):
