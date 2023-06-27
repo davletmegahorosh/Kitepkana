@@ -5,6 +5,7 @@ from admins.serializers import AdminPanelSerializer
 from rest_framework.response import Response
 from rest_framework import permissions
 
+
 @extend_schema_view(
     get = extend_schema(
         summary='Метод для получения всех авторов, жанров, книг'

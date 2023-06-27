@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'users',
     'djoser',
     'admins',
-    'django_filters'
+    'django_filters',
 ]
 
 REST_FRAMEWORK = {
@@ -64,6 +64,7 @@ REST_FRAMEWORK = {
     'DATETIME_FORMAT': "%d.%m.%Y %H:%M:%S",
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'SEARCH_PARAM': 'q'
 }
 
 MIDDLEWARE = [
@@ -183,7 +184,7 @@ DJOSER = {
     ],
     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}',
     'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}',
-    'ACTIVATION_URL': 'activate/{uid}/{token}',
+    # 'ACTIVATION_URL': 'activate/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': True,
     'SERIALIZERS': {
         'user_create': 'users.serializers.UserSerializer',

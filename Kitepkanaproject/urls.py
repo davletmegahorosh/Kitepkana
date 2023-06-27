@@ -1,8 +1,7 @@
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, include
 from Kitepkanaproject.settings import MEDIA_ROOT, MEDIA_URL
 from django.conf.urls.static import static
-from django.views.generic import TemplateView
 from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
 urlpatterns = [
@@ -14,9 +13,8 @@ urlpatterns = [
     path('', include('admins.urls')),
 
     # USER
-    path('auth/', include('djoser.urls')),
+    path('auth/', include('users.urls')),
     path('auth/', include('djoser.urls.jwt')),
-    path('', include('users.urls')),
 
     # DRF-SPECTACULAR
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

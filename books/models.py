@@ -1,11 +1,22 @@
 from django.db import models
 from django.urls import reverse
-from users.models import User
+from social_core.utils import build_absolute_uri
+from users.models import User, Profile
 from .genres_list import GENRE_CHOICES
 
 
 class Authors(models.Model):
+    image = models.ImageField(upload_to='')
     fullname = models.CharField(max_length=100)
+    bio = models.TextField()
+    short_story = models.CharField(max_length=100)
+    genre = models.CharField()
+    language = models.CharField(max_length=50)
+    date_of_birth = models.CharField()
+    place_of_birth = models.CharField(max_length=200)
+    literary_activity = models.TextField()
+    awards = models.TextField()
+    citizenship = models.CharField(max_length=150)
 
     class Meta:
         verbose_name = "Автор"
@@ -40,9 +51,9 @@ class Books(models.Model):
     title = models.CharField(max_length=100)
     author = models.ForeignKey(Authors, on_delete=models.CASCADE, null=True, blank=True, related_name='author_books')
     summary = models.TextField()
-    pages = models.IntegerField()
     genre = models.ManyToManyField(Genres, related_name='genre_books')
     file = models.FileField(upload_to='', null=True, blank=True)
+    publication_year = models.CharField(max_length=100)
 
     class Meta:
         ordering = ['cover', 'title', 'author']
@@ -50,7 +61,8 @@ class Books(models.Model):
         verbose_name_plural = "Книги"
 
     def get_absolute_url(self):
-        return reverse('books_detail', kwargs={"pk": self.pk})
+        return build_absolute_uri(reverse('books-detail', kwargs={"pk": self.pk}))
+        # return reverse('books-detail', kwargs={"pk": self.pk})
 
     def __str__(self):
         return f"{str(self.title)}"
@@ -92,7 +104,7 @@ class Review(models.Model):
     text = models.TextField(help_text='Оставь комментарии')
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    user = models.ForeignKey(User, verbose_name="Пользователь", on_delete=models.CASCADE)
+    profile = models.ForeignKey(Profile, verbose_name="Пользователь", on_delete=models.CASCADE, related_name='profile')
 
     class Meta:
         verbose_name = "Отзыв"
@@ -170,3 +182,15 @@ class FinishBookMark(models.Model):
 
     def __str__(self):
         return f'{self.user.username} bookmarked {self.book.title}'
+
+
+class Page(models.Model):
+    book = models.ForeignKey(Books, on_delete=models.CASCADE, related_name='book', verbose_name='страницы ')
+    text = models.TextField()
+
+    class Meta:
+        verbose_name = "Cтраница"
+        verbose_name_plural = "Страницы"
+
+    def __str__(self):
+        return f'{self.book} page: {self.id}'
