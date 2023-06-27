@@ -1,31 +1,30 @@
 from django.db.models.functions import Round
-from django.http import Http404
 from pypdf import PdfReader
 from rest_framework import status, generics, mixins
-from rest_framework.generics import get_object_or_404, ListAPIView, ListCreateAPIView
+from rest_framework.generics import get_object_or_404, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Books, Genres, Authors, Review, Favorite, Page
 from .permissions_book import IsOwner
-from .serializers import FavoriteCreateSerializer, \
+from .serializers import  FavoriteCreateSerializer, \
     FavoriteSerializer, CreateRatingSerializer
 from rest_framework import viewsets
 from random import sample
-from django_filters import rest_framework as filters
-from django_filters.rest_framework import DjangoFilterBackend
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
-from books.serializers import WillReadBookMarkSerializer
-from .service import get_client_username, BookAPIPagination
+from books.serializers import  WillReadBookMarkSerializer
+from .service import get_client_username, BookAPIPagination, get_object_or_void
 from .serializers import AuthorListSerializer, AuthorDetailSerializer
 from .serializers import GenreListSerializer, GenreDetailSerializer, BookListSerializer
 from .serializers import BookDetailSerializer, FinishBookMarkCreateSerializer
-from .serializers import ReadingBookMarkCreateSerializer, ReviewCreateSerializer
+from .serializers import  ReadingBookMarkCreateSerializer, ReviewCreateSerializer
 from .serializers import ReviewListSerializer, SuggestSerializer, PageBookSerializer, GetFileFieldFromBookSerializer
 from django.db import models
 from Kitepkanaproject.settings import BASE_DIR
-from django.conf import settings
+from rest_framework.filters import SearchFilter
+from django_filters.rest_framework import DjangoFilterBackend
+from django_filters import BaseInFilter, CharFilter, FilterSet
 
 
 class AuthorListView(generics.GenericAPIView,
@@ -128,40 +127,57 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class RecommendedBooks(generics.ListAPIView):
-    serializer_class = SuggestSerializer
+    serializer_class = BookListSerializer
     permission_classes = (AllowAny,)
     queryset = Books.objects.all()
 
     def get_queryset(self):
-        all_books = Books.objects.all()
-        choice = len(all_books) // 2
-        recommended = sample(list(all_books), choice)
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+        res = Round(total_rating_value, precision=1)
+        books = Books.objects.annotate(
+            middle_star=res
+        )
+        choice = len(books) // 2
+        recommended = sample(list(books), choice)
         return recommended
 
 
-class FavoriteListCreateView(generics.ListCreateAPIView):
-    serializer_class = FavoriteCreateSerializer
+class FavoriteListCreateView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get_serializer_class(self):
-        if self.request.method == 'GET':
-            return FavoriteSerializer
-        return FavoriteCreateSerializer
+    def post(self, request):
+        serializer = FavoriteCreateSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+        return Response(data={"msg": "created"})
 
-    def get_queryset(self):
-        user = self.request.user
-        if user.is_anonymous:
-            raise Http404
-        return Favorite.objects.filter(user=user)
+    def get(self, request):
+        serializer_context = {'request': request}
+        favorite_id  = Favorite.objects.filter(user=self.request.user).values('id')
+        favorite_obj = Favorite.objects.filter(id__in=favorite_id).values('book_id')
+        id_list = [item ['book_id'] for item in favorite_obj]
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+        average = Round(total_rating_value, precision=1)
+        books = Books.objects.annotate(
+            middle_star=average
+        ).filter(id__in=id_list)
+
+        serializer = BookListSerializer(books, many=True, context=serializer_context).data
+
+        return Response(data=serializer, status=status.HTTP_200_OK)
 
 
-class FavoriteDeleteView(generics.DestroyAPIView):
-    permission_classes = (IsOwner,)
-    serializer_class = FavoriteSerializer
-    queryset = Favorite.objects.all()
+class FavoriteDeleteView(APIView):
+    permission_classes = (IsOwner, )
+
+    def delete(self, request, pk):
+        book_obj = get_object_or_void(Books, id=pk)
+        favorite_obj = get_object_or_void(Favorite, book=book_obj.id, user=self.request.user)
+        favorite_obj.delete()
+        return Response(data={"msg": "deleted"}, status=status.HTTP_204_NO_CONTENT)
 
 
-class CharFilterInFilter(filters.BaseInFilter, filters.CharFilter):
+class CharFilterInFilter(BaseInFilter, CharFilter):
     pass
 
 
@@ -180,8 +196,9 @@ class CharFilterInFilter(filters.BaseInFilter, filters.CharFilter):
 #     filterset_class = GenreFilter
 
 
-class TitleFilter(filters.FilterSet):
+class TitleFilter(FilterSet):
     titles = CharFilterInFilter(field_name='title', lookup_expr='in')
+
 
     class Meta:
         model = Books
@@ -193,6 +210,7 @@ class TitleFilterAPIView(ListAPIView):
     serializer_class = BookDetailSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         books = Books.objects.annotate(
@@ -202,7 +220,7 @@ class TitleFilterAPIView(ListAPIView):
         return books
 
 
-class AuthorFilter(filters.FilterSet):
+class AuthorFilter(FilterSet):
     authors = CharFilterInFilter(field_name='author__fullname', lookup_expr='in')
 
     class Meta:
@@ -215,6 +233,8 @@ class AuthorFilterAPIView(ListAPIView):
     serializer_class = SuggestSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_class = AuthorFilter
+    permission_classes = (AllowAny,)
+
 
 
 # class ReadingBookMarkAPIView(ListCreateAPIView, ):
@@ -238,7 +258,6 @@ class ReadingBookMarkDeleteView(generics.DestroyAPIView):
     permission_classes = (IsOwner,)
     serializer_class = ReadingBookMarkCreateSerializer
     queryset = ReadingBookMark.objects.all()
-
 
 #
 # class WillReadBookMarkAPIView(generics.ListCreateAPIView):
@@ -287,6 +306,7 @@ class FinishBookMarkDeleteView(generics.DestroyAPIView):
 
 class TitleSuggestView(ListAPIView):
     serializer_class = SuggestSerializer
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
@@ -297,6 +317,7 @@ class TitleSuggestView(ListAPIView):
 
 class AuthorSuggestView(ListAPIView):
     serializer_class = SuggestSerializer
+    permission_classes = (AllowAny,)
 
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
@@ -306,6 +327,7 @@ class AuthorSuggestView(ListAPIView):
 
 
 class AddStarRatingView(APIView):
+    permission_classes = (IsAuthenticated,)
 
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -324,42 +346,14 @@ class AddStarRatingView(APIView):
 
 class MainPageView(APIView):
     author_list_serializer = AuthorListSerializer
-    permission_classes = (AllowAny,)
 
     def get(self, request):
         serializer_context = {
             'request': request,
         }
-        # Deployment objects
-        authors = Authors.objects.all()  # <------for author_list_serializer
-        total_rating_value = models.Avg(models.F('ratings__star__value'))  # <--- for best_book_serializer
-        average = Round(total_rating_value, precision=1)
-        filtered_the_best_books = Books.objects.annotate(
-            middle_star=average
-        ).filter(middle_star__gt=3)
-        recommended_queryset = Books.objects.annotate(  # <--- for best_book_serializer
-            middle_star=average
-        ).all()
-        divide_recommended_queryset = len(recommended_queryset) // 2
-        complete_recommended = sample(list(recommended_queryset), divide_recommended_queryset)
-        manas_book = Books.objects.annotate(
-            middle_star=average
-        ).filter(title='Манас')  # <--- for manas_book_serializer
-
-        # serializers
-        recommended_books_serializer = \
-            BookListSerializer(complete_recommended, many=True, context=serializer_context).data
-        best_book_serializer = \
-            BookListSerializer(filtered_the_best_books, many=True, context=serializer_context).data
-        author_list_serializer = \
-            self.author_list_serializer(authors, many=True, context=serializer_context).data
-
-        manas_book_serializer = BookListSerializer(manas_book, many=True, context=serializer_context).data
-        return Response(data={'our_writers': author_list_serializer,
-                              'best_books': best_book_serializer,
-                              'recommended_books': recommended_books_serializer,
-                              'manas_book': manas_book_serializer
-                              })
+        authors = Authors.objects.all()
+        author_list_serializer = self.author_list_serializer(authors, many=True, context=serializer_context).data
+        return Response(data={'author_list': author_list_serializer})
 
 
 class ReadingBookView(generics.GenericAPIView):
@@ -437,13 +431,17 @@ class ForBookCreatePagesAPIView(generics.GenericAPIView):
 
         return Response(data='Page objects created')
 
-# class TestApiView(APIView):
-#
-#     def get(self, request):
-#         user = get_object_or_404(User, id=request.user.id)
-#         token_class = RefreshToken().for_user(user)
-#         data = {}
-#         data["refresh"] = str(token_class)
-#         data["access"] = str(token_class.access_token)
-#         domain = request.build_absolute_uri('/')[:-1]+'/'
-#         return Response(data=data)
+
+class BookSearchFilterAPIView(generics.ListAPIView):
+    queryset = Books.objects.all()
+    serializer_class = BookListSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    search_fields = ['title', 'author__fullname', 'genre__genre_name', ]
+    # filterset_fields = ['genre__genre_name', 'title']
+
+    def get_queryset(self):
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+        res = Round(total_rating_value, precision=1)
+        books = Books.objects.annotate(
+            middle_star=res)
+        return books

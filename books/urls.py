@@ -1,18 +1,18 @@
-from django.urls import path, include
+from django.urls import path
 from rest_framework import routers
-from rest_framework.routers import SimpleRouter
 from .views import TitleFilterAPIView, AuthorFilterAPIView,  TitleSuggestView, \
     AuthorSuggestView, ReadingBookView
 from .views import AuthorListView, AuthorDetailView, GenreListView, GenreDetailView
-from .views import BookListView, BookDetailView, RecommendedBooks, AddStarRatingView, ReviewViewSet, \
-    FavoriteListCreateView, FavoriteDeleteView, FinishBookMarkDeleteView, WillReadBookMarkDeleteView,\
-    ReadingBookMarkDeleteView, ForBookCreatePagesAPIView
+from .views import BookListView, BookDetailView, RecommendedBooks, ReviewViewSet, \
+    FavoriteListCreateView, FavoriteDeleteView, FinishBookMarkDeleteView,\
+    ReadingBookMarkDeleteView, ForBookCreatePagesAPIView,  BookSearchFilterAPIView
 from .views import MainPageView
 
 router = routers.SimpleRouter()
 router.register(r'reviews', ReviewViewSet)
 
 urlpatterns = [
+    path('search_filter/', BookSearchFilterAPIView.as_view()),
     path('create_page_book/<int:pk>/', ForBookCreatePagesAPIView.as_view()),
     path('read/book/<int:pk>/', ReadingBookView.as_view(), name='read_book'),
     path('main/', MainPageView.as_view(), name='authors-detail'),
@@ -23,12 +23,11 @@ urlpatterns = [
     path('books/', BookListView.as_view(), name='books-list'),
     path('books/<int:pk>/', BookDetailView.as_view(), name='books-detail'),
     path('recommended_books/', RecommendedBooks.as_view(), name='recommended_books'),
-    path('add_star/', AddStarRatingView.as_view(), name='add_star'),
-
 ]
 
 # Filters
 urlpatterns += [
+    path('favorite/', FavoriteListCreateView.as_view(), name='favorite'),
     path('titles_filter/', TitleFilterAPIView.as_view(), name='titles_filter'),
     path('authors_filter/', AuthorFilterAPIView.as_view(), name='authors_filter'),
     path('read_bookmark/<int:pk>/', ReadingBookMarkDeleteView.as_view(), name='read_bookmark-detail'),

@@ -3,7 +3,7 @@ from django.db.models.functions import Round
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from users.models import User, Profile
+from users.models import Profile
 from .service import get_object_or_void
 from users.serializers import ForReviewProfileSerializer
 from .models import RatingStar, Page
@@ -37,7 +37,7 @@ class AuthorListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Authors
-        fields = ("id", "url", "image", "short_story", "awards", "works")
+        fields = ("id", "url", "image","fullname", "date_of_birth", "short_story", "awards", "works")
 
     def get_works(self, id):
         books = Books.objects.filter(author=id)
@@ -67,20 +67,32 @@ class RatingSerializer(serializers.ModelSerializer):
 
 # Review
 class ReviewListSerializer(serializers.ModelSerializer):
-    profile = ForReviewProfileSerializer()
+    username = serializers.SerializerMethodField()
+    user_photo = serializers.SerializerMethodField()
     user_stars = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
-        fields = 'id text created_date updated_date profile user_stars'.split(' ')
+        fields = 'id username user_photo user_stars text created_date updated_date'.split(' ')
 
     def get_user_stars(self, review):
         # filtered = Rating.objects.get(book=review.book, user=review.profile)
-        rate = get_object_or_void(Rating, book=review.book, user=review.profile)
+        rate = get_object_or_void(Rating, book=review.book, user=review.profile.user)
         data = RatingSerializer(rate).data
         stars = get_object_or_void(RatingStar, id=data['star'])
         serializer = StarsSerializer(stars).data
-        return serializer
+        return serializer['value']
+
+    def get_username(self, review):
+        profile = get_object_or_void(Profile, id=review.profile.id)
+        serializer = ForReviewProfileSerializer(profile, many=False).data
+        return serializer['username']
+
+    def get_user_photo(self, review):
+        profile = get_object_or_void(Profile, id=review.profile.id)
+        serializer = ForReviewProfileSerializer(profile, many=False).data
+        photo = self.context['request'].build_absolute_uri()[:-9]+serializer['user_photo']
+        return photo
 
 
 class ReviewCreateSerializer(serializers.ModelSerializer):
@@ -98,9 +110,42 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
             text = validated_data['text']
         except KeyError:
             raise ValidationError({"text": ["This field is required."]})
+        query = self.context['request'].data['star']
+
+        if query == '':
+            raise ValidationError({"star": ["This field is required."]})
+
+        if query is None:
+            raise ValidationError({"star": ["This field is required."]})
+        if type(query)!= int:
+            raise ValidationError('Incorrect type of value. Must be num')
+
+        if int(query) > 5:
+            raise ValidationError('value must be less than or equal to 5')
+        if int(query) < 1:
+            raise ValidationError('value must be equal')
+        try:
+            star = RatingStar.objects.get(value=query)
+
+        except ValueError:
+            raise ValidationError({"star": ["This field is required."]})
+        except RatingStar.DoesNotExist:
+            raise ValidationError({"star": ["This field is required."]})
 
         profile = get_object_or_404(Profile, user=user)
+        #
+        found = Rating.objects.filter(user=user, book=book)
+        if found:
+            rating_obj = found[0]
+            rating_obj.star = star
+            rating_obj.save()
+        else:
+            Rating.objects.create(
+                user=user,
+                book=book,
+                star=star
 
+            )
         review = Review.objects.create(profile=profile, book=book, text=text)
         return review
 
@@ -113,23 +158,10 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 ####BOOK
 class BookListSerializer(serializers.HyperlinkedModelSerializer):
     middle_star = serializers.FloatField()
-    read_book_url = serializers.SerializerMethodField()
-    stash_book_url = False
 
     class Meta:
         model = Books
-        fields = ("id", "title", "cover", "author_name", "middle_star", "read_book_url", "url")
-
-    def get_read_book_url(self, books):
-        domain = self.context['request'].build_absolute_uri('/')[:-1]+'/'
-        read_url = domain+'read/book/'+ str(books.id)+'/'
-        return read_url
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        if self.stash_book_url is True:
-            data.pop('read_book_url')
-        return data
+        fields = ("id", "title", "cover", "author_name", "summary", "middle_star")
 
 
 class BookDetailSerializer(serializers.ModelSerializer):
@@ -239,17 +271,22 @@ class CreateRatingSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
-    book_cover = serializers.SerializerMethodField()
+    book = serializers.SerializerMethodField()
 
     class Meta:
         model = Favorite
-        fields = 'id book_title book_cover'.split(' ')
+        fields = 'id book'.split(' ')
 
-    def get_book_cover(self, favorite):
-        obj = get_object_or_404(Books, pk=favorite.book.id)
-        serializer = BookSerializer(obj, many=False).data
-        book_cover = serializer['cover']
-        return book_cover
+    def get_book(self, favorite):
+        serializer_context = {'request': self.context['request']}
+
+        total_rating_value = models.Avg(models.F('ratings__star__value'))
+        average = Round(total_rating_value, precision=1)
+        queryset = Books.objects.annotate(
+            middle_star=average,
+        ).get(id=favorite.book.id)
+        books_serializer = BookSerializer(queryset,context=serializer_context).data
+        return books_serializer
 
 
 class FavoriteCreateSerializer(serializers.ModelSerializer):
@@ -341,7 +378,7 @@ class FinishBookMarkCreateSerializer(serializers.ModelSerializer):
 class PageBookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
-        fields = ("text",)
+        fields = ("id", "text")
 
 
 class GetFileFieldFromBookSerializer(serializers.ModelSerializer):

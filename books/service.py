@@ -1,8 +1,6 @@
 from django.shortcuts import get_object_or_404, _get_queryset
 from pypdf import PdfReader
 from rest_framework.pagination import PageNumberPagination
-
-
 from users.models import User
 
 
@@ -54,6 +52,7 @@ class BookAPIPagination(PageNumberPagination):
     page_size = 1
     max_page_size = 10000
     signal_start = None
+
 
 
 
