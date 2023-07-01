@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import Books, Genres, Authors, Review, Favorite, Page
+from .models import Books, Genres, Authors, Review, Favorite, Page, Rating
 from .permissions_book import IsOwner
 from .serializers import  FavoriteCreateSerializer, \
     FavoriteSerializer, CreateRatingSerializer
@@ -101,6 +101,7 @@ class BookDetailView(generics.GenericAPIView,
 
         return books
 
+## Нужно внести этот код на сервер
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
@@ -124,6 +125,42 @@ class ReviewViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [AllowAny]
         return [permission() for permission in permission_classes]
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        instance_rating = get_object_or_void(Rating, user=request.user, book=instance.book)
+        print(instance_rating)
+        rating_serializer = CreateRatingSerializer(instance_rating, data=request.data, partial=partial)
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        rating_serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        self.perform_update(rating_serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        rating_instance = get_object_or_void(Rating, user=request.user, book=instance.book)
+        self.perform_destroy(instance)
+        self.perform_destroy(rating_instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 class RecommendedBooks(generics.ListAPIView):
@@ -362,6 +399,7 @@ class ReadingBookView(generics.GenericAPIView):
     serializer_class = PageBookSerializer
     permission_classes = (AllowAny,)
 
+
     def get(self, request, *args, **kwargs):
         book = get_object_or_404(Books, id=self.kwargs.get('pk'))
         filtered_data = Page.objects.filter(book=book)
@@ -369,6 +407,7 @@ class ReadingBookView(generics.GenericAPIView):
         get_page = request.GET.get('page')
         current_page = get_page
         user = request.user
+
 
         if current_page is None:
             current_page = 1
@@ -401,12 +440,13 @@ class ReadingBookView(generics.GenericAPIView):
                 print('end index')
         else:
             pass
+
         print(request.user)
         queryset = self.filter_queryset(filtered_data)
-
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
+
             return self.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
