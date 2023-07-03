@@ -89,7 +89,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_finish(self, profile):
         from books.serializers import FinishBookMarkCreateSerializer, BookSerializer
-        from books.models import FinishBookMark,Books
+        from books.models import FinishBookMark, Books
         serializer_context = {'request': self.context['request']}
         filter_bookmark = FinishBookMark.objects.filter(user=profile.user)
         serializer = FinishBookMarkCreateSerializer(filter_bookmark, many=True).data
@@ -104,7 +104,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     def get_favorite(self, profile):
         from books.serializers import FavoriteCreateSerializer, BookSerializer
-        from books.models import Favorite,Books
+        from books.models import Favorite, Books
         serializer_context = {'request': self.context['request']}
         filter_bookmark = Favorite.objects.filter(user=profile.user)
         serializer = FavoriteCreateSerializer(filter_bookmark, many=True).data

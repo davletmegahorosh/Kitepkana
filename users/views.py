@@ -14,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from djoser.views import UserViewSet
-from users.email import ActivationEmail, ConfirmationEmail
+from users.email import ActivationEmail, ConfirmationEmail, PasswordRecoveryEmail
 User = get_user_model()
 
 
@@ -89,6 +89,8 @@ class CustomDjoserViewSet(UserViewSet):
             self.permission_classes = settings.PERMISSIONS.password_reset
         elif self.action == "reset_password_confirm":
             self.permission_classes = settings.PERMISSIONS.password_reset_confirm
+        elif self.action == 'password_recovery':
+            self.permission_classes = settings.PERMISSIONS.activation
         elif self.action == "set_password":
             self.permission_classes = settings.PERMISSIONS.set_password
         elif self.action == "set_username":
@@ -122,6 +124,8 @@ class CustomDjoserViewSet(UserViewSet):
             if settings.PASSWORD_RESET_CONFIRM_RETYPE:
                 return settings.SERIALIZERS.password_reset_confirm_retype
             return settings.SERIALIZERS.password_reset_confirm
+        elif self.action == 'password_recovery':
+            return settings.SERIALIZERS.password_reset
         elif self.action == "set_password":
             if settings.SET_PASSWORD_RETYPE:
                 return settings.SERIALIZERS.set_password_retype
@@ -222,3 +226,16 @@ class CustomDjoserViewSet(UserViewSet):
             context = {"user": user}
             to = [get_user_email(user)]
             ActivationEmail(self.request, context).send(to)
+
+    @action(["post"], detail=False)
+    def password_recovery(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.get_user()
+
+        if user:
+            context = {"user": user}
+            to = [get_user_email(user)]
+            PasswordRecoveryEmail(self.request, context).send(to)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
