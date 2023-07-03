@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from users.models import Profile
-from .service import get_object_or_void
+from .service import get_object_or_void, validate_star
 from users.serializers import ForReviewProfileSerializer
 from .models import RatingStar, Page
 from .models import Books, Genres, Authors, Review, Favorite, Rating
@@ -37,7 +37,7 @@ class AuthorListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Authors
-        fields = ("id", "url", "image","fullname", "date_of_birth", "short_story", "awards", "works")
+        fields = ("id", "url", "image", "fullname", "date_of_birth", "short_story", "awards", "works")
 
     def get_works(self, id):
         books = Books.objects.filter(author=id)
@@ -91,10 +91,10 @@ class ReviewListSerializer(serializers.ModelSerializer):
     def get_user_photo(self, review):
         profile = get_object_or_void(Profile, id=review.profile.id)
         serializer = ForReviewProfileSerializer(profile, many=False).data
-        photo = self.context['request'].build_absolute_uri()[:-9]+serializer['user_photo']
+        photo = self.context['request'].build_absolute_uri()[:-9] + serializer['user_photo']
         return photo
 
-
+## Нужно внести этот код на сервер
 class ReviewCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
@@ -110,50 +110,30 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
             text = validated_data['text']
         except KeyError:
             raise ValidationError({"text": ["This field is required."]})
-        query = self.context['request'].data['star']
-
-        if query == '':
-            raise ValidationError({"star": ["This field is required."]})
-
-        if query is None:
-            raise ValidationError({"star": ["This field is required."]})
-        if type(query)!= int:
-            raise ValidationError('Incorrect type of value. Must be num')
-
-        if int(query) > 5:
-            raise ValidationError('value must be less than or equal to 5')
-        if int(query) < 1:
-            raise ValidationError('value must be equal')
         try:
-            star = RatingStar.objects.get(value=query)
+            query = self.context['request'].data['star']
+        except KeyError:
+            raise ValidationError({"star": ["This field is required."]})
 
-        except ValueError:
-            raise ValidationError({"star": ["This field is required."]})
-        except RatingStar.DoesNotExist:
-            raise ValidationError({"star": ["This field is required."]})
+        star = RatingStar.objects.get(value=validate_star(query))
 
         profile = get_object_or_404(Profile, user=user)
-        #
-        found = Rating.objects.filter(user=user, book=book)
-        if found:
-            rating_obj = found[0]
-            rating_obj.star = star
-            rating_obj.save()
-        else:
-            Rating.objects.create(
-                user=user,
-                book=book,
-                star=star
 
-            )
-        review = Review.objects.create(profile=profile, book=book, text=text)
+        rating = get_object_or_void(Rating, user=user, book=book)
+        review = get_object_or_void(Review, profile__user=user, book=book)
+        if rating and review:
+            raise ValidationError('Вы уже оставили отзыв!')
+
+        else:
+            Rating.objects.create(user=user, book=book, star=star)
+            review = Review.objects.create(profile=profile, book=book, text=text)
         return review
 
     def update(self, instance, validated_data):
         instance.text = validated_data.get('text', instance.text)
         instance.save()
         return instance
-
+### -----
 
 ####BOOK
 class BookListSerializer(serializers.HyperlinkedModelSerializer):
@@ -172,7 +152,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Books
-        fields = ('id', 'cover', 'title', 'author_name', 'publication_year', 'genre', 'middle_star',  'summary',
+        fields = ('id', 'cover', 'title', 'author_name', 'publication_year', 'genre', 'middle_star', 'summary',
                   'reviews', 'similar_books')
 
     def get_similar_books(self, books):
@@ -223,7 +203,7 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Authors
         fields = (
-            "id", "image", "fullname", "date_of_birth", "place_of_birth", "citizenship","language", "genre", "bio",
+            "id", "image", "fullname", "date_of_birth", "place_of_birth", "citizenship", "language", "genre", "bio",
             "literary_activity",
             "author_books",)
 
@@ -238,37 +218,19 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
         serializer = BookListSerializer(queryset, many=True, context=serializer_context).data
         return serializer
 
-
+## Нужно внести этот код на сервер
 class CreateRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
         fields = ('star', 'book')
 
-    def create(self, validated_data):
-        user = validated_data.get('user', None)
-        book = validated_data.get('book', None)
-        bew = validated_data.get('star')
-        star = RatingStar.objects.get(value=bew.id)
-        # print(star.id)
-
-        found = Rating.objects.filter(user=user, book=book)
-        if found:
-            rating_obj = found[0]
-            rating_obj.user = user
-            rating_obj.book = book
-            rating_obj.star = star
-            rating_obj.save()
-            return rating_obj
-
-        else:
-            rating = Rating.objects.create(
-                user=validated_data.get('user', None),
-                book=validated_data.get('book', None),
-                star=star
-
-            )
-            return rating
-
+    def update(self, instance, validated_data):
+        star_object = validated_data.get('star')
+        id_star_object = get_object_or_void(RatingStar, value=star_object.id)
+        instance.star = id_star_object
+        instance.save()
+        return instance
+### ---
 
 class FavoriteSerializer(serializers.ModelSerializer):
     book = serializers.SerializerMethodField()
@@ -285,7 +247,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         queryset = Books.objects.annotate(
             middle_star=average,
         ).get(id=favorite.book.id)
-        books_serializer = BookSerializer(queryset,context=serializer_context).data
+        books_serializer = BookSerializer(queryset, context=serializer_context).data
         return books_serializer
 
 
