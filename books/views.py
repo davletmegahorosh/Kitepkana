@@ -23,9 +23,9 @@ from .serializers import ReviewListSerializer, SuggestSerializer, PageBookSerial
 from django.db import models
 from Kitepkanaproject.settings import BASE_DIR
 from rest_framework.filters import SearchFilter
-from django_filters.rest_framework import DjangoFilterBackend
+from django_filters.rest_framework import DjangoFilterBackend, OrderingFilter
 from django_filters import BaseInFilter, CharFilter, FilterSet
-
+from rest_framework.filters import OrderingFilter
 
 class AuthorListView(generics.GenericAPIView,
                      mixins.ListModelMixin):
@@ -475,9 +475,10 @@ class ForBookCreatePagesAPIView(generics.GenericAPIView):
 class BookSearchFilterAPIView(generics.ListAPIView):
     queryset = Books.objects.all()
     serializer_class = BookListSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     search_fields = ['title', 'author__fullname', 'genre__genre_name', ]
-    # filterset_fields = ['genre__genre_name', 'title']
+    ordering_fields = ['middle_star', 'created_date']
+    filterset_fields = ['genre__genre_name']
 
     def get_queryset(self):
         total_rating_value = models.Avg(models.F('ratings__star__value'))

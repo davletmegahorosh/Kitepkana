@@ -141,7 +141,7 @@ class BookListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Books
-        fields = ("id", "title", "cover", "author_name", "summary", "middle_star")
+        fields = ("id", "title", "cover", "author_name", "summary", "middle_star", 'created_date')
 
 
 class BookDetailSerializer(serializers.ModelSerializer):

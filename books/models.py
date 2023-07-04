@@ -54,6 +54,7 @@ class Books(models.Model):
     genre = models.ManyToManyField(Genres, related_name='genre_books')
     file = models.FileField(upload_to='', null=True, blank=True)
     publication_year = models.CharField(max_length=100)
+    created_date = models.DateTimeField(auto_now_add=True, null=True)
 
     class Meta:
         ordering = ['cover', 'title', 'author']
