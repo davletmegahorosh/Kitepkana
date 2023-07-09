@@ -185,12 +185,23 @@ class FinishBookMark(models.Model):
 
 
 class Page(models.Model):
-    book = models.ForeignKey(Books, on_delete=models.CASCADE, related_name='book', verbose_name='страницы ')
+    book = models.ForeignKey(Books, on_delete=models.CASCADE, related_name='book', verbose_name='страницы')
+    number = models.PositiveIntegerField(verbose_name='номер страницы', default=1)
     text = models.TextField()
 
     class Meta:
-        verbose_name = "Cтраница"
+        verbose_name = "Страница"
         verbose_name_plural = "Страницы"
 
     def __str__(self):
-        return f'{self.book} page: {self.id}'
+        return f'{self.book} page: {self.number}'
+
+
+
+class Progress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    book = models.ForeignKey(Books, on_delete=models.CASCADE)
+    current_page = models.IntegerField()
+
+    class Meta:
+        unique_together = ('user', 'book')
