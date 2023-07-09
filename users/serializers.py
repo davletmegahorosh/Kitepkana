@@ -7,6 +7,7 @@ from rest_framework.exceptions import ValidationError
 from .models import Profile
 from rest_framework import serializers, exceptions
 import users.constants
+from books.service import get_object_or_void
 User = get_user_model()
 
 
@@ -76,45 +77,52 @@ class ProfileSerializer(serializers.ModelSerializer):
         from books.serializers import ReadingBookMarkCreateSerializer, BookSerializer
         from books.models import ReadingBookMark, Books
         serializer_context = {'request': self.context['request']}
-        filter_bookmark = ReadingBookMark.objects.filter(user=profile.user)
+        user = self.context['request'].user
+        filter_bookmark = ReadingBookMark.objects.filter(user=user, user__id=user.id).order_by('-id')
         serializer = ReadingBookMarkCreateSerializer(filter_bookmark, many=True).data
         book_id_list = [item['book'] for item in serializer]
         total_rating_value = models.Avg(models.F('ratings__star__value'))
         average = Round(total_rating_value, precision=1)
         queryset = Books.objects.annotate(
             middle_star=average,
-        ).filter(id__in=book_id_list)
-        books_serializer = BookSerializer(queryset, many=True, context=serializer_context).data
+        )
+
+        data = [get_object_or_void(queryset, id=i) for i in book_id_list]
+        books_serializer = BookSerializer(data, many=True, context=serializer_context).data
         return books_serializer
 
     def get_finish(self, profile):
         from books.serializers import FinishBookMarkCreateSerializer, BookSerializer
-        from books.models import FinishBookMark, Books
+        from books.models import FinishBookMark,Books
         serializer_context = {'request': self.context['request']}
-        filter_bookmark = FinishBookMark.objects.filter(user=profile.user)
+        user = self.context['request'].user
+        filter_bookmark = FinishBookMark.objects.filter(user=user, user__id=user.id).order_by('-id')
         serializer = FinishBookMarkCreateSerializer(filter_bookmark, many=True).data
         book_id_list = [item['book'] for item in serializer]
         total_rating_value = models.Avg(models.F('ratings__star__value'))
         average = Round(total_rating_value, precision=1)
         queryset = Books.objects.annotate(
             middle_star=average
-        ).filter(id__in=book_id_list)
-        books_serializer = BookSerializer(queryset, many=True, context=serializer_context).data
+        )
+        data = [get_object_or_void(queryset, id=i) for i in book_id_list]
+        books_serializer = BookSerializer(data, many=True, context=serializer_context).data
         return books_serializer
 
     def get_favorite(self, profile):
         from books.serializers import FavoriteCreateSerializer, BookSerializer
-        from books.models import Favorite, Books
+        from books.models import Favorite,Books
         serializer_context = {'request': self.context['request']}
-        filter_bookmark = Favorite.objects.filter(user=profile.user)
+        user = self.context['request'].user
+        filter_bookmark = Favorite.objects.filter(user=user, user__id=user.id).order_by('-id')
         serializer = FavoriteCreateSerializer(filter_bookmark, many=True).data
         book_id_list = [item['book'] for item in serializer]
         total_rating_value = models.Avg(models.F('ratings__star__value'))
         average = Round(total_rating_value, precision=1)
         queryset = Books.objects.annotate(
             middle_star=average
-        ).filter(id__in=book_id_list)
-        books_serializer = BookSerializer(queryset, many=True, context=serializer_context).data
+        )
+        data = [get_object_or_void(queryset, id=i) for i in book_id_list]
+        books_serializer = BookSerializer(data, many=True, context=serializer_context).data
         return books_serializer
 
 

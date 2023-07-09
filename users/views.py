@@ -89,7 +89,7 @@ class CustomDjoserViewSet(UserViewSet):
             self.permission_classes = settings.PERMISSIONS.password_reset
         elif self.action == "reset_password_confirm":
             self.permission_classes = settings.PERMISSIONS.password_reset_confirm
-        elif self.action == 'password_recovery':
+        elif self.action == "password_recovery":
             self.permission_classes = settings.PERMISSIONS.activation
         elif self.action == "set_password":
             self.permission_classes = settings.PERMISSIONS.set_password

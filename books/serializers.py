@@ -3,12 +3,13 @@ from django.db.models.functions import Round
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-from users.models import Profile
+from users.models import User, Profile
 from .service import get_object_or_void, validate_star
 from users.serializers import ForReviewProfileSerializer
 from .models import RatingStar, Page
 from .models import Books, Genres, Authors, Review, Favorite, Rating
 from .models import ReadingBookMark, WillReadBookMark, FinishBookMark
+import string
 
 
 class StarsSerializer(serializers.ModelSerializer):
@@ -37,7 +38,7 @@ class AuthorListSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Authors
-        fields = ("id", "url", "image", "fullname", "date_of_birth", "short_story", "awards", "works")
+        fields = ("id", "url", "image","fullname", "date_of_birth", "short_story", "awards", "works")
 
     def get_works(self, id):
         books = Books.objects.filter(author=id)
@@ -91,10 +92,10 @@ class ReviewListSerializer(serializers.ModelSerializer):
     def get_user_photo(self, review):
         profile = get_object_or_void(Profile, id=review.profile.id)
         serializer = ForReviewProfileSerializer(profile, many=False).data
-        photo = self.context['request'].build_absolute_uri()[:-9] + serializer['user_photo']
+        photo = self.context['request'].build_absolute_uri()[:-9]+serializer['user_photo']
         return photo
 
-## Нужно внести этот код на сервер
+
 class ReviewCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
@@ -133,7 +134,6 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
         instance.text = validated_data.get('text', instance.text)
         instance.save()
         return instance
-### -----
 
 ####BOOK
 class BookListSerializer(serializers.HyperlinkedModelSerializer):
@@ -152,7 +152,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Books
-        fields = ('id', 'cover', 'title', 'author_name', 'publication_year', 'genre', 'middle_star', 'summary',
+        fields = ('id', 'cover', 'title', 'author_name', 'publication_year', 'genre', 'middle_star',  'summary',
                   'reviews', 'similar_books')
 
     def get_similar_books(self, books):
@@ -184,9 +184,14 @@ class SuggestSerializer(BookSimpleSerializer):
 
 
 class GenreListSerializer(serializers.HyperlinkedModelSerializer):
+    extra_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Genres
-        fields = ("id", "genre_name", "url",)
+        fields = ("id", "genre_name", "extra_name")
+
+    def get_extra_name(self, genres):
+        return genres.genre_name
 
 
 class GenreDetailSerializer(serializers.ModelSerializer):
@@ -203,7 +208,7 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Authors
         fields = (
-            "id", "image", "fullname", "date_of_birth", "place_of_birth", "citizenship", "language", "genre", "bio",
+            "id", "image", "fullname", "date_of_birth", "place_of_birth", "citizenship","language", "genre", "bio",
             "literary_activity",
             "author_books",)
 
@@ -218,7 +223,7 @@ class AuthorDetailSerializer(serializers.ModelSerializer):
         serializer = BookListSerializer(queryset, many=True, context=serializer_context).data
         return serializer
 
-## Нужно внести этот код на сервер
+
 class CreateRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rating
@@ -230,7 +235,6 @@ class CreateRatingSerializer(serializers.ModelSerializer):
         instance.star = id_star_object
         instance.save()
         return instance
-### ---
 
 class FavoriteSerializer(serializers.ModelSerializer):
     book = serializers.SerializerMethodField()
@@ -247,7 +251,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         queryset = Books.objects.annotate(
             middle_star=average,
         ).get(id=favorite.book.id)
-        books_serializer = BookSerializer(queryset, context=serializer_context).data
+        books_serializer = BookSerializer(queryset,context=serializer_context).data
         return books_serializer
 
 

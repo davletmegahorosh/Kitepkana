@@ -1,7 +1,8 @@
 from django.db.models.functions import Round
+from django.http import Http404
 from pypdf import PdfReader
 from rest_framework import status, generics, mixins
-from rest_framework.generics import get_object_or_404, ListAPIView
+from rest_framework.generics import get_object_or_404, ListAPIView, ListCreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -25,6 +26,7 @@ from Kitepkanaproject.settings import BASE_DIR
 from rest_framework.filters import SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import BaseInFilter, CharFilter, FilterSet
+from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 
 
@@ -102,7 +104,6 @@ class BookDetailView(generics.GenericAPIView,
 
         return books
 
-## Нужно внести этот код на сервер
 
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
@@ -179,7 +180,6 @@ class RecommendedBooks(generics.ListAPIView):
         recommended = sample(list(books), choice)
         return recommended
 
-
 class FavoriteListCreateView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -249,6 +249,7 @@ class TitleFilterAPIView(ListAPIView):
     filter_backends = [DjangoFilterBackend]
     filterset_class = TitleFilter
     permission_classes = (AllowAny,)
+
 
     def get_queryset(self):
         books = Books.objects.annotate(
@@ -346,6 +347,7 @@ class TitleSuggestView(ListAPIView):
     serializer_class = SuggestSerializer
     permission_classes = (AllowAny,)
 
+
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
         if query:
@@ -357,6 +359,7 @@ class AuthorSuggestView(ListAPIView):
     serializer_class = SuggestSerializer
     permission_classes = (AllowAny,)
 
+
     def get_queryset(self):
         query = self.request.query_params.get('query', '')
         if query:
@@ -366,6 +369,7 @@ class AuthorSuggestView(ListAPIView):
 
 class AddStarRatingView(APIView):
     permission_classes = (IsAuthenticated,)
+
 
     def get_permissions(self):
         if self.request.method == 'POST':
@@ -485,9 +489,10 @@ class ForBookCreatePagesAPIView(generics.GenericAPIView):
 class BookSearchFilterAPIView(generics.ListAPIView):
     queryset = Books.objects.all()
     serializer_class = BookListSerializer
-    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_backends = (DjangoFilterBackend, SearchFilter, OrderingFilter)
     search_fields = ['title', 'author__fullname', 'genre__genre_name', ]
-    # filterset_fields = ['genre__genre_name', 'title']
+    ordering_fields = ['middle_star', 'created_date']
+    filterset_fields = ['genre__genre_name']
 
     def get_queryset(self):
         total_rating_value = models.Avg(models.F('ratings__star__value'))

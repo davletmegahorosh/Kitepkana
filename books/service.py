@@ -1,4 +1,3 @@
-from django.contrib.auth.password_validation import exceeds_maximum_length_ratio
 from django.shortcuts import get_object_or_404, _get_queryset
 from pypdf import PdfReader
 from rest_framework.exceptions import ValidationError
@@ -11,6 +10,7 @@ from django.core.exceptions import (
     ValidationError,
 )
 from django.utils.translation import gettext as _
+from django.contrib.auth.password_validation import exceeds_maximum_length_ratio
 
 
 def get_client_username(request):
@@ -63,8 +63,6 @@ class BookAPIPagination(PageNumberPagination):
     signal_start = None
 
 
-## Нужно внести этот код на сервер
-
 def validate_star(value):
     if value == '' or value is None:
         raise ValidationError({"star": ["This field is required."]})
@@ -79,7 +77,7 @@ def validate_star(value):
     if int(value) < 1:
         raise ValidationError('value must be equal')
     return value
-# ---
+
 
 
 class UserAttributeSimilarityValidator:
@@ -138,3 +136,4 @@ class UserAttributeSimilarityValidator:
         return _(
             "Your password can’t be too similar to your other personal information."
         )
+
