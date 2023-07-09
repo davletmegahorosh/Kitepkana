@@ -1,10 +1,11 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework import routers
+from rest_framework.routers import SimpleRouter
 from .views import TitleFilterAPIView, AuthorFilterAPIView,  TitleSuggestView, \
     AuthorSuggestView, ReadingBookView
 from .views import AuthorListView, AuthorDetailView, GenreListView, GenreDetailView
-from .views import BookListView, BookDetailView, RecommendedBooks, ReviewViewSet, \
-    FavoriteListCreateView, FavoriteDeleteView, FinishBookMarkDeleteView,\
+from .views import BookListView, BookDetailView, RecommendedBooks, AddStarRatingView, ReviewViewSet, \
+    FavoriteListCreateView, FavoriteDeleteView, FinishBookMarkDeleteView, WillReadBookMarkDeleteView,\
     ReadingBookMarkDeleteView, ForBookCreatePagesAPIView,  BookSearchFilterAPIView
 from .views import MainPageView
 

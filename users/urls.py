@@ -19,4 +19,3 @@ urlpatterns = [
     re_path(r"^jwt/verify/?", TokenVerifyView.as_view(), name="jwt-verify"),
 ]
 urlpatterns += router.urls
-
