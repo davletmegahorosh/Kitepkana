@@ -6,7 +6,7 @@ from .views import TitleFilterAPIView, AuthorFilterAPIView,  TitleSuggestView, \
 from .views import AuthorListView, AuthorDetailView, GenreListView, GenreDetailView
 from .views import BookListView, BookDetailView, RecommendedBooks, AddStarRatingView, ReviewViewSet, \
     FavoriteListCreateView, FavoriteDeleteView, FinishBookMarkDeleteView, WillReadBookMarkDeleteView,\
-    ReadingBookMarkDeleteView, ForBookCreatePagesAPIView,  BookSearchFilterAPIView
+    ReadingBookMarkDeleteView, ForBookCreatePagesAPIView,  BookSearchFilterAPIView, ManasReadingView
 from .views import MainPageView
 
 router = routers.SimpleRouter()
@@ -16,6 +16,7 @@ urlpatterns = [
     path('search_filter/', BookSearchFilterAPIView.as_view()),
     path('create_page_book/<int:pk>/', ForBookCreatePagesAPIView.as_view()),
     path('read/book/<int:pk>/', ReadingBookView.as_view(), name='read_book'),
+    path('read/book/manas/', ManasReadingView.as_view()),
     path('main/', MainPageView.as_view(), name='authors-detail'),
     path('authors/', AuthorListView.as_view(), name='author-list'),
     path('authors/<int:pk>/', AuthorDetailView.as_view(), name='authors-detail'),

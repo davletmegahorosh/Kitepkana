@@ -28,6 +28,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import BaseInFilter, CharFilter, FilterSet
 from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
+from django.shortcuts import redirect
 
 
 class AuthorListView(generics.GenericAPIView,
@@ -403,11 +404,18 @@ class CustomPageNumberPagination(PageNumberPagination):
     page_size_query_param = 'page_size'
     max_page_size = 5000
 
+
+
 class ReadingBookView(generics.GenericAPIView):
     queryset = Page.objects.all()
     serializer_class = PageBookSerializer
     permission_classes = (IsAuthenticated,)
     pagination_class = CustomPageNumberPagination
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
     def get_queryset(self):
         book_id = self.kwargs['pk']
@@ -432,38 +440,133 @@ class ReadingBookView(generics.GenericAPIView):
             if page_number:
                 page_number = int(page_number)
                 if page_number >= 1 and page_number <= end_pages:
-                    if progress.current_page is None or page_number > progress.current_page:
-                        progress.current_page = page_number
-                        progress.save()
-                        page = pages.filter(number=page_number).first()
+                    progress.current_page = page_number
+                    progress.save()
+                    page = pages.filter(number=page_number).first()
+                else:
+                    # Если указан недопустимый номер страницы, перенаправляем на текущую страницу
+                    return redirect(f"/read/book/{book_id}/?page={progress.current_page}")
 
             if not user.is_anonymous:
                 if int(progress.current_page) >= 1 and int(progress.current_page) < end_pages:
                     print('start index')
-                    exist_obj = ReadingBookMark.objects.filter(user=user, book=book)
-                    if not exist_obj:
-                        finish = ReadingBookMark.objects.create(user=user, book=book)
-                        finish.save()
+                    exist_reading_obj = ReadingBookMark.objects.filter(user=user, book=book).exists()
+                    if not exist_reading_obj:
+                        reading_obj = ReadingBookMark.objects.create(user=user, book=book)
+                        reading_obj.save()
                 elif int(progress.current_page) == end_pages:
-                    bookmark_reading = ReadingBookMark.objects.get(user=user, book=book)
-                    if bookmark_reading:
-                        bookmark_reading.delete()
-                    exist_obj = FinishBookMark.objects.filter(user=user, book=book)
-                    if not exist_obj:
-                        finish = FinishBookMark.objects.create(user=user, book=book)
-                        finish.save()
+                    exist_reading_obj = ReadingBookMark.objects.filter(user=user, book=book).exists()
+                    if not exist_reading_obj:
+                        reading_obj = ReadingBookMark.objects.create(user=user, book=book)
+                        reading_obj.save()
+
+                    exist_finish_obj = FinishBookMark.objects.filter(user=user, book=book).exists()
+                    if not exist_finish_obj:
+                        finish_obj = FinishBookMark.objects.create(user=user, book=book)
+                        finish_obj.save()
+
+                    reading_obj = ReadingBookMark.objects.filter(user=user, book=book).first()
+                    if reading_obj:
+                        reading_obj.delete()
+
                     print('end index')
 
         except Progress.DoesNotExist:
-            # Создание и сохранение объекта Progress
             progress = Progress.objects.create(user=user, book=book, current_page=1)
             progress.save()
             page = None
 
-        print(request.user)
         queryset = self.paginate_queryset(pages)
         serializer = self.get_serializer(queryset, many=True)
-        return self.get_paginated_response(serializer.data)
+        response = self.get_paginated_response(serializer.data)
+
+        current_page = request.query_params.get('page')
+        response.data['current_page'] = current_page
+
+        return response
+
+
+
+
+class ManasReadingView(generics.GenericAPIView):
+    queryset = Page.objects.all()
+    serializer_class = PageBookSerializer
+    permission_classes = (IsAuthenticated,)
+    pagination_class = CustomPageNumberPagination
+
+    # def get_queryset(self):
+    #     book_id = self.kwargs['pk']
+    #     return Page.objects.filter(book_id=book_id)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    def get(self, request, *args, **kwargs):
+        # book_id = self.kwargs['pk']
+        page_number = request.query_params.get('page')
+        user = request.user
+
+        book = get_object_or_404(Books, title='Манас')
+        pages = Page.objects.filter(book=book)
+        end_pages = len(pages)
+
+        try:
+            progress = Progress.objects.get(user=user, book=book)
+            if progress.current_page:
+                page = pages.filter(number=progress.current_page).first()
+            else:
+                page = None
+
+            if page_number:
+                page_number = int(page_number)
+                if page_number >= 1 and page_number <= end_pages:
+                    progress.current_page = page_number
+                    progress.save()
+                    page = pages.filter(number=page_number).first()
+                else:
+                    # Если указан недопустимый номер страницы, перенаправляем на текущую страницу
+                    return redirect(f"/read/book/{book.title.replace(' ', '-')}/?page={progress.current_page}")
+
+            if not user.is_anonymous:
+                if int(progress.current_page) >= 1 and int(progress.current_page) < end_pages:
+                    print('start index')
+                    exist_reading_obj = ReadingBookMark.objects.filter(user=user, book=book).exists()
+                    if not exist_reading_obj:
+                        reading_obj = ReadingBookMark.objects.create(user=user, book=book)
+                        reading_obj.save()
+                elif int(progress.current_page) == end_pages:
+                    exist_reading_obj = ReadingBookMark.objects.filter(user=user, book=book).exists()
+                    if not exist_reading_obj:
+                        reading_obj = ReadingBookMark.objects.create(user=user, book=book)
+                        reading_obj.save()
+
+                    exist_finish_obj = FinishBookMark.objects.filter(user=user, book=book).exists()
+                    if not exist_finish_obj:
+                        finish_obj = FinishBookMark.objects.create(user=user, book=book)
+                        finish_obj.save()
+
+                    reading_obj = ReadingBookMark.objects.filter(user=user, book=book).first()
+                    if reading_obj:
+                        reading_obj.delete()
+
+                    print('end index')
+
+        except Progress.DoesNotExist:
+            progress = Progress.objects.create(user=user, book=book, current_page=1)
+            progress.save()
+            page = None
+
+        queryset = self.paginate_queryset(pages)
+        serializer = self.get_serializer(queryset, many=True)
+        response = self.get_paginated_response(serializer.data)
+
+        current_page = request.query_params.get('page')
+        response.data['current_page'] = current_page
+
+        return response
+
 
 
 class ForBookCreatePagesAPIView(generics.GenericAPIView):

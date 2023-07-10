@@ -342,9 +342,18 @@ class FinishBookMarkCreateSerializer(serializers.ModelSerializer):
 
 
 class PageBookSerializer(serializers.ModelSerializer):
+    current_page = serializers.SerializerMethodField()
+
     class Meta:
         model = Page
-        fields = ("id", "text")
+        fields = ('id', 'text', 'current_page')
+
+    def get_current_page(self, obj):
+        request = self.context.get('request')
+        if request:
+            return request.query_params.get('page')
+        return None
+
 
 
 class GetFileFieldFromBookSerializer(serializers.ModelSerializer):
