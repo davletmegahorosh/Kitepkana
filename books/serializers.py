@@ -96,6 +96,8 @@ class ReviewListSerializer(serializers.ModelSerializer):
         return photo
 
 
+from django.core.exceptions import ObjectDoesNotExist
+
 class ReviewCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
@@ -103,37 +105,51 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
+
+        # Check if the user has already left 3 reviews
+        if Review.objects.filter(profile__user=user).count() > 3:
+            raise ValidationError('Вы можете оставить только до трех отзывов.')
+
         try:
             book = validated_data['book']
         except KeyError:
             raise ValidationError({"book": ["This field is required."]})
+
         try:
             text = validated_data['text']
         except KeyError:
             raise ValidationError({"text": ["This field is required."]})
+
         try:
-            query = self.context['request'].data['star']
+            star = self.context['request'].data['star']
         except KeyError:
             raise ValidationError({"star": ["This field is required."]})
 
-        star = RatingStar.objects.get(value=validate_star(query))
+        # Check if the user has already left 3 star ratings
+        if Rating.objects.filter(user=user).count() > 3:
+            raise ValidationError('Вы можете установить только до трех рейтингов звезд.')
+
+        try:
+            star = RatingStar.objects.get(value=validate_star(star))
+        except ObjectDoesNotExist:
+            raise ValidationError({"star": ["Недопустимое значение рейтинга звезд."]})
 
         profile = get_object_or_404(Profile, user=user)
 
-        rating = get_object_or_void(Rating, user=user, book=book)
-        review = get_object_or_void(Review, profile__user=user, book=book)
-        if rating and review:
-            raise ValidationError('Вы уже оставили отзыв!')
+        if Rating.objects.filter(user=user, book=book).count() >= 3 and \
+                Review.objects.filter(profile__user=user, book=book).count() >= 3:
+            raise ValidationError('Вы уже оставили рейтинг для этой книги.')
 
-        else:
-            Rating.objects.create(user=user, book=book, star=star)
-            review = Review.objects.create(profile=profile, book=book, text=text)
+        review = Review.objects.create(profile=profile, book=book, text=text)
+        Rating.objects.create(user=user, book=book, star=star)
+
         return review
 
     def update(self, instance, validated_data):
         instance.text = validated_data.get('text', instance.text)
         instance.save()
         return instance
+
 
 ####BOOK
 class BookListSerializer(serializers.HyperlinkedModelSerializer):
