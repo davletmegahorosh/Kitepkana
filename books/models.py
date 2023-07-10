@@ -207,3 +207,6 @@ class Progress(models.Model):
 
     class Meta:
         unique_together = ('user', 'book')
+
+    def __str__(self):
+        return f'{self.book} - {self.user} - {self.current_page}'
