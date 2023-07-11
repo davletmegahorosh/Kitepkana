@@ -443,9 +443,9 @@ class ReadingBookView(generics.GenericAPIView):
                     progress.current_page = page_number
                     progress.save()
                     page = pages.filter(number=page_number).first()
-                else:
-                    # Если указан недопустимый номер страницы, перенаправляем на текущую страницу
-                    return redirect(f"/read/book/{book_id}/?page={progress.current_page}")
+            else:
+                # Если указан недопустимый номер страницы, перенаправляем на текущую страницу
+                return redirect(f"/read/book/{book_id}/?page={progress.current_page}")
 
             if not user.is_anonymous:
                 if int(progress.current_page) >= 1 and int(progress.current_page) < end_pages:
@@ -525,9 +525,9 @@ class ManasReadingView(generics.GenericAPIView):
                     progress.current_page = page_number
                     progress.save()
                     page = pages.filter(number=page_number).first()
-                else:
-                    # Если указан недопустимый номер страницы, перенаправляем на текущую страницу
-                    return redirect(f"/read/book/{book.title.replace(' ', '-')}/?page={progress.current_page}")
+            else:
+                # Если указан недопустимый номер страницы, перенаправляем на текущую страницу
+                return redirect(f"/read/book/manas/?page={progress.current_page}")
 
             if not user.is_anonymous:
                 if int(progress.current_page) >= 1 and int(progress.current_page) < end_pages:
